@@ -19,5 +19,7 @@ export function extractSnapshot(session) {
     return { id: c.id, name: c.name, tier: c.tier, lon: anchor.lon, lat: anchor.lat };
   });
   const land = (session.world.land ?? []).map((poly) => ({ id: poly.id, rings: poly.rings }));
-  return Object.freeze({ provinces, coastline, markers, land });
+  const rivers = (session.world.rivers ?? []).map((r) => ({ id: r.id, points: r.points }));
+  const lakes = (session.world.lakes ?? []).map((lake) => ({ id: lake.id, rings: lake.rings }));
+  return Object.freeze({ provinces, coastline, markers, land, rivers, lakes });
 }

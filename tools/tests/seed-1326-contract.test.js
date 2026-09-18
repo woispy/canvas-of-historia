@@ -8,7 +8,7 @@ import Ajv from 'ajv/dist/2020.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const load = (rel) => JSON.parse(readFileSync(path.join(root, rel), 'utf8'));
 
-const ajv = new Ajv({ allErrors: true });
+const ajv = new Ajv({ allErrors: true }); const compiled = new Map();
 const scenarioSchema = load('docs/contracts/scenario.schema.json');
 const provinceSchema = load('docs/contracts/province.schema.json');
 const citySchema = load('docs/contracts/city.schema.json');
@@ -18,9 +18,11 @@ const provinces = load('data/scenarios/1326/provinces.json');
 const cities = load('data/scenarios/1326/cities.json');
 const coastline = load('data/scenarios/1326/coastline.json');
 const land = load('data/scenarios/1326/land.json');
+const rivers = load('data/scenarios/1326/rivers.json');
+const lakes = load('data/scenarios/1326/lakes.json');
 
 function check(schema, data, label) {
-  const valid = ajv.compile(schema);
+  let valid = compiled.get(schema.$id); if (!valid) { valid = ajv.compile(schema); compiled.set(schema.$id, valid); }
   const ok = valid(data);
   assert.ok(ok, `${label}: ${JSON.stringify(valid.errors)}`);
 }
@@ -49,6 +51,20 @@ describe('1326 seed contracts', () => {
         }
       }
     }
+  });
+  it('rivers reuse the coastline polyline shape, lakes the land polygon shape', () => {
+    const coastlineSchema = load('docs/contracts/coastline.schema.json');
+    const landSchema = load('docs/contracts/land.schema.json');
+    const { west, south, east, north } = scenario.mapScope.bounds;
+    assert.ok(rivers.length >= 1, 'at least one river run');
+    assert.ok(lakes.length >= 1, 'at least one lake');
+    for (const r of rivers) {
+      check(coastlineSchema, r, `river ${r.id}`);
+      for (const [lon, lat] of r.points) {
+        assert.ok(lon >= west && lon <= east && lat >= south && lat <= north, `out of bounds: ${lon},${lat}`);
+      }
+    }
+    for (const lake of lakes) check(landSchema, lake, `lake ${lake.id}`);
   });
   it('coastline is real data inside scenario bounds', () => {
     const { west, south, east, north } = scenario.mapScope.bounds;

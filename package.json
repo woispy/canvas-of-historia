@@ -10,7 +10,10 @@
     "test": "node --test \"tools/tests/**/*.test.js\"",
     "gis:fetch": "node tools/gis/fetch-ne-land.js",
     "gis:build-land": "node tools/gis/build-land.js",
-    "gis:land": "npm run gis:fetch && npm run gis:build-land"
+    "gis:land": "npm run gis:fetch && npm run gis:build-land",
+    "gis:fetch-hydro": "node tools/gis/fetch-ne-hydro.js",
+    "gis:build-hydro": "node tools/gis/build-hydro.js",
+    "gis:hydro": "npm run gis:fetch-hydro && npm run gis:build-hydro"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

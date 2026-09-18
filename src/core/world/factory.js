@@ -19,5 +19,14 @@ export function bootstrapWorld(def) {
       Object.freeze({ ...poly, rings: Object.freeze(poly.rings.map((ring) => Object.freeze(ring.map((pt) => Object.freeze([...pt]))))) }),
     ),
   );
-  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, land });
+  const freezePts = (pts) => Object.freeze(pts.map((pt) => Object.freeze([...pt])));
+  const rivers = Object.freeze(
+    (def.rivers ?? []).map((r) => Object.freeze({ ...r, points: freezePts(r.points) })),
+  );
+  const lakes = Object.freeze(
+    (def.lakes ?? []).map((lake) =>
+      Object.freeze({ ...lake, rings: Object.freeze(lake.rings.map((ring) => freezePts(ring))) }),
+    ),
+  );
+  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, land, rivers, lakes });
 }

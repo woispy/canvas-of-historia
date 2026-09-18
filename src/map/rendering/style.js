@@ -34,6 +34,15 @@ export const STYLE_25D_V1 = Object.freeze({
     width: 1.3,
     glow: 'rgba(255, 255, 255, 0.45)',
   }),
+  lake: Object.freeze({
+    fill: '#b8d4e4',
+    edge: 'rgba(51, 73, 79, 0.6)',
+    edgeWidth: 1,
+  }),
+  river: Object.freeze({
+    color: 'rgba(63, 109, 140, 0.85)',
+    width: 1.1,
+  }),
   marker: Object.freeze({
     city: '#7a5c17',
     capital: '#a03d12',

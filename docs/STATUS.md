@@ -12,8 +12,11 @@ S2 done (green, 27/27 → 31/31): 2.5D Canvas2D render, NE 10m land (38 polys)
 S3 done (green, 37/37): click selection (province/city) + read-only panels.
 S4 done (green, 41/41): monthly tick (immutable sessions), Bursa boom event,
 Byzantine AI reaction, determinism proven. Slice S1–S4 exit criteria met.
-Details: `docs/work-log/2026-09-18-s3-selection.md`, `2026-09-18-s4-tick.md`.
-Next: user review — then Phase 4 GIS refinement or Phase 6 UI growth.
+Git: fresh root commit pushed to GitHub (mirror).
+Phase 4 started (green, 42/42): NE 10m rivers (20 runs) + lakes (6 polys),
+rendered as new layers; 50m scripts retired.
+Details: `docs/work-log/2026-09-18-s4-tick.md`, `2026-09-18-commit-hydro.md`.
+Next: Phase 4 remainder (DEM/terrain) or Phase 7 economy — user picks.
 
 ## Done
 

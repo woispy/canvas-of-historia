@@ -28,7 +28,7 @@ export function validateScenario(def) {
   };
 
   if (!def || typeof def !== 'object') throw new ScenarioError('validate', ['empty definition']);
-  const { scenario, provinces, cities, coastline, land } = def;
+  const { scenario, provinces, cities, coastline, land, rivers, lakes } = def;
   need(scenario && typeof scenario === 'object', 'scenario: missing object');
   need(Array.isArray(provinces) && provinces.length > 0, 'provinces: non-empty array required');
   need(Array.isArray(cities), 'cities: array required');
@@ -95,6 +95,34 @@ export function validateScenario(def) {
             ring.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
         ),
       `land ${poly.id}: rings must be closed [lon, lat] loops`,
+    );
+  }
+
+  // Rivers share the coastline polyline shape; lakes share the land polygon
+  // shape (schema reuse documented in ADR-002 follow-up / work-log).
+  for (const r of rivers ?? []) {
+    need(isId(r.id), `river.id invalid: ${r.id}`);
+    need(r.scenarioId === scenario.id, `river ${r.id}: scenario mismatch`);
+    need(
+      Array.isArray(r.points) &&
+        r.points.length >= 2 &&
+        r.points.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
+      `river ${r.id}: points must be [lon, lat] pairs`,
+    );
+  }
+  for (const lake of lakes ?? []) {
+    need(isId(lake.id), `lake.id invalid: ${lake.id}`);
+    need(lake.scenarioId === scenario.id, `lake ${lake.id}: scenario mismatch`);
+    need(
+      Array.isArray(lake.rings) &&
+        lake.rings.length >= 1 &&
+        lake.rings.every(
+          (ring) =>
+            Array.isArray(ring) &&
+            ring.length >= 4 &&
+            ring.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
+        ),
+      `lake ${lake.id}: rings must be closed [lon, lat] loops`,
     );
   }
 

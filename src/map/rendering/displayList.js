@@ -13,11 +13,25 @@ export function buildDisplayList(snapshot, camera, width, height) {
       rings: poly.rings.map((ring) => projectRing(camera, width, height, ring)),
     });
   }
+  for (const lake of snapshot.lakes ?? []) {
+    commands.push({
+      type: 'lake-fill',
+      id: lake.id,
+      rings: lake.rings.map((ring) => projectRing(camera, width, height, ring)),
+    });
+  }
   for (const seg of snapshot.coastline) {
     commands.push({
       type: 'coastline',
       id: seg.id,
       points: seg.points.map((pt) => project(camera, width, height, pt)),
+    });
+  }
+  for (const r of snapshot.rivers ?? []) {
+    commands.push({
+      type: 'river',
+      id: r.id,
+      points: r.points.map((pt) => project(camera, width, height, pt)),
     });
   }
   for (const p of snapshot.provinces) {

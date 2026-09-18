@@ -65,6 +65,29 @@ export function renderCanvas2D(ctx, width, height, commands) {
         ctx.restore();
         break;
       }
+      case 'lake-fill': {
+        ctx.fillStyle = S.lake.fill;
+        ctx.beginPath();
+        for (const ring of cmd.rings) {
+          ctx.moveTo(ring[0][0], ring[0][1]);
+          for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
+          ctx.closePath();
+        }
+        ctx.fill('evenodd');
+        ctx.strokeStyle = S.lake.edge;
+        ctx.lineWidth = S.lake.edgeWidth;
+        ctx.stroke();
+        break;
+      }
+      case 'river': {
+        ctx.strokeStyle = S.river.color;
+        ctx.lineWidth = S.river.width;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        tracePolyline(ctx, cmd.points);
+        ctx.stroke();
+        break;
+      }
       case 'province-fill': {
         // Political wash over terrain: translucent, no shadow (land owns depth).
         ctx.save();
