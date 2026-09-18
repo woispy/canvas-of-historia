@@ -31,6 +31,8 @@ Coast truth pass (2026-09-19, green 53/53): 17° border artifact removed,
 sea-tone carve (un-bridges straits), tan ribbon gone, edge vignette.
 World base (2026-09-19, green 53/53): ADR-005 — global NE land (2042 polys),
 no bbox clipping, meter-RDP, pole fix; OSM polygonizer deleted.
+Coast final (2026-09-19, green 53/53): plain black 1.2px stroke, wash clipped
+to land (no sea spill), credit moved to CREDITS.md.
 
 ## Done
 

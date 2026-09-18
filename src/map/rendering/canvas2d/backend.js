@@ -183,8 +183,17 @@ export function renderCanvas2D(ctx, width, height, commands) {
         break;
       }
       case 'province-fill': {
-        // Political wash over terrain: translucent, no shadow (land owns depth).
+        // Political wash over terrain, clipped to land: never enters the sea.
         ctx.save();
+        if (cmd.landClip) {
+          ctx.beginPath();
+          for (const ring of cmd.landClip) {
+            ctx.moveTo(ring[0][0], ring[0][1]);
+            for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
+            ctx.closePath();
+          }
+          ctx.clip('evenodd');
+        }
         ctx.globalAlpha = S.provinceWashAlpha;
         ctx.fillStyle = cmd.color;
         tracePath(ctx, cmd.ring);

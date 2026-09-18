@@ -10,9 +10,9 @@ export const STYLE_25D_V1 = Object.freeze({
     // Depth bands in WORLD degrees (not px): constant geographic width, so the
     // shallows grow with zoom like real water and always dwarf source mismatch.
     bands: Object.freeze([
-      { widthDeg: 0.004, color: 'rgba(235, 246, 252, 0.45)' },
-      { widthDeg: 0.01, color: 'rgba(235, 246, 252, 0.22)' },
-      { widthDeg: 0.022, color: 'rgba(235, 246, 252, 0.10)' },
+      { widthDeg: 0.003, color: 'rgba(235, 246, 252, 0.35)' },
+      { widthDeg: 0.008, color: 'rgba(235, 246, 252, 0.15)' },
+      { widthDeg: 0.016, color: 'rgba(235, 246, 252, 0.07)' },
     ]),
   }),
   // Sea-tone carve (world degrees): erases terrain/land spill and un-bridges
@@ -37,9 +37,8 @@ export const STYLE_25D_V1 = Object.freeze({
     innerWidth: 1,
   }),
   coastline: Object.freeze({
-    color: '#33494f',
-    width: 1.3,
-    glow: 'rgba(255, 255, 255, 0.45)',
+    color: '#14181a',
+    width: 1.2,
   }),
   lake: Object.freeze({
     fill: '#b8d4e4',

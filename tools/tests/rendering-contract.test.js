@@ -107,6 +107,11 @@ describe('rendering contract (S2)', () => {
     assert.ok(kinds.filter((k) => k === 'coast-bands').length >= 1, 'shallow bands present');
     assert.ok(kinds.filter((k) => k === 'coastline').length >= 1, 'crisp coastline present');
     assert.equal(kinds.filter((k) => k === 'province-fill').length, 6);
+    const fills = cmds.filter((c) => c.type === 'province-fill');
+    assert.ok(
+      fills.every((c) => Array.isArray(c.landClip) && c.landClip.length > 0),
+      'political washes carry the land clip (never enter the sea)',
+    );
     assert.equal(kinds.filter((k) => k === 'province-border').length, 6);
     assert.equal(kinds.filter((k) => k === 'marker').length, 6);
     const finite = (pt) => Number.isFinite(pt[0]) && Number.isFinite(pt[1]);

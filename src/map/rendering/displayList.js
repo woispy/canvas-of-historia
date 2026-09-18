@@ -37,6 +37,11 @@ export function buildDisplayList(snapshot, camera, width, height) {
       points: smoothCoast(seg),
     });
   }
+  // Projected land rings, shared by terrain clip and political clip:
+  // washes may never enter the sea (evenodd over all land polys).
+  const landScreen = (snapshot.land ?? []).flatMap((poly) =>
+    poly.rings.map((ring) => projectRing(camera, width, height, ring)),
+  );
   for (const poly of snapshot.land ?? []) {
     commands.push({
       type: 'land-fill',
@@ -62,9 +67,7 @@ export function buildDisplayList(snapshot, camera, width, height) {
       y: ty0,
       w: tx1 - tx0,
       h: ty1 - ty0,
-      landRings: (snapshot.land ?? []).flatMap((poly) =>
-        poly.rings.map((ring) => projectRing(camera, width, height, ring)),
-      ),
+      landRings: landScreen,
     });
   }
   for (const r of snapshot.rivers ?? []) {
@@ -80,6 +83,7 @@ export function buildDisplayList(snapshot, camera, width, height) {
       id: p.id,
       color: p.color,
       ring: projectRing(camera, width, height, p.ring),
+      landClip: landScreen,
     });
   }
   // Carve AFTER fills (trims boxes to shore) but BEFORE borders/markers.
