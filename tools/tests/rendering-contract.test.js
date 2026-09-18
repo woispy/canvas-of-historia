@@ -34,6 +34,19 @@ describe('rendering contract (S2)', () => {
     assert.equal(snap.markers.length, 6);
   });
 
+  it('coastline LOD switches base ↔ HD by zoom', async () => {
+    const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
+    const snap = extractSnapshot(session);
+    const far = buildDisplayList(snap, createCamera({ scale: 100 }), W, H)
+      .filter((c) => c.type === 'coastline');
+    const near = buildDisplayList(snap, createCamera({ scale: 800 }), W, H)
+      .filter((c) => c.type === 'coastline');
+    assert.ok(far.length > 0 && far.every((c) => c.detail === 'base'));
+    assert.ok(near.length > 0 && near.every((c) => c.detail === 'hd'));
+    const farPts = far.reduce((n, c) => n + c.points.length, 0);
+    const nearPts = near.reduce((n, c) => n + c.points.length, 0);
+    assert.ok(nearPts > farPts * 5, `HD denser up close: ${nearPts} vs ${farPts}`);
+  });
   it('display list covers sea, coastline, fills, borders, markers', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);

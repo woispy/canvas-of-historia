@@ -8,6 +8,7 @@ import scenario from '../data/scenarios/1326/scenario.json';
 import provinces from '../data/scenarios/1326/provinces.json';
 import cities from '../data/scenarios/1326/cities.json';
 import coastline from '../data/scenarios/1326/coastline.json';
+import coastlineHd from '../data/scenarios/1326/coastline-hd.json';
 import land from '../data/scenarios/1326/land.json';
 import rivers from '../data/scenarios/1326/rivers.json';
 import lakes from '../data/scenarios/1326/lakes.json';
@@ -29,6 +30,7 @@ const seedReader = async (rel) => {
   if (rel.endsWith('provinces.json')) return provinces;
   if (rel.endsWith('cities.json')) return cities;
   if (rel.endsWith('coastline.json')) return coastline;
+  if (rel.endsWith('coastline-hd.json')) return coastlineHd;
   if (rel.endsWith('land.json')) return land;
   if (rel.endsWith('rivers.json')) return rivers;
   if (rel.endsWith('lakes.json')) return lakes;

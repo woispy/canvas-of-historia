@@ -4,6 +4,11 @@
 
 import { project, projectRing } from '../camera/camera.js';
 
+// LOD rule: the OSM high-detail twin takes over once points would land
+// denser than ~4px apart. Below that the NE 10m base layer is identical
+// on screen and far cheaper.
+export const HD_MIN_SCALE = 250;
+
 export function buildDisplayList(snapshot, camera, width, height) {
   const commands = [{ type: 'sea' }];
   for (const poly of snapshot.land ?? []) {
@@ -36,10 +41,13 @@ export function buildDisplayList(snapshot, camera, width, height) {
       ),
     });
   }
-  for (const seg of snapshot.coastline) {
+  const hd = camera.scale >= HD_MIN_SCALE && (snapshot.coastlineHd ?? []).length > 0;
+  const coastSource = hd ? snapshot.coastlineHd : snapshot.coastline;
+  for (const seg of coastSource) {
     commands.push({
       type: 'coastline',
       id: seg.id,
+      detail: hd ? 'hd' : 'base',
       points: seg.points.map((pt) => project(camera, width, height, pt)),
     });
   }

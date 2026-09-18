@@ -9,17 +9,17 @@ export function bootstrapWorld(def) {
   );
   const cities = new Map(def.cities.map((c) => [c.id, Object.freeze({ ...c })]));
   // Coastline is an independent authority layer, never derived from rings.
-  const coastline = Object.freeze(
-    (def.coastline ?? []).map((seg) =>
-      Object.freeze({ ...seg, points: Object.freeze(seg.points.map((pt) => Object.freeze([...pt]))) }),
-    ),
-  );
+  // The HD twin shares the shape; LOD selection happens in displayList.
+  const freezePts = (pts) => Object.freeze(pts.map((pt) => Object.freeze([...pt])));
+  const freezeSegments = (list) =>
+    Object.freeze((list ?? []).map((seg) => Object.freeze({ ...seg, points: freezePts(seg.points) })));
+  const coastline = freezeSegments(def.coastline);
+  const coastlineHd = freezeSegments(def.coastlineHd);
   const land = Object.freeze(
     (def.land ?? []).map((poly) =>
       Object.freeze({ ...poly, rings: Object.freeze(poly.rings.map((ring) => Object.freeze(ring.map((pt) => Object.freeze([...pt]))))) }),
     ),
   );
-  const freezePts = (pts) => Object.freeze(pts.map((pt) => Object.freeze([...pt])));
   const rivers = Object.freeze(
     (def.rivers ?? []).map((r) => Object.freeze({ ...r, points: freezePts(r.points) })),
   );
@@ -31,5 +31,5 @@ export function bootstrapWorld(def) {
   const terrain = def.terrain
     ? Object.freeze({ ...def.terrain, values: Object.freeze([...def.terrain.values]) })
     : null;
-  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, land, rivers, lakes, terrain });
+  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, coastlineHd, land, rivers, lakes, terrain });
 }

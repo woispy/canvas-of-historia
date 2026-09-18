@@ -28,11 +28,12 @@ export function validateScenario(def) {
   };
 
   if (!def || typeof def !== 'object') throw new ScenarioError('validate', ['empty definition']);
-  const { scenario, provinces, cities, coastline, land, rivers, lakes, terrain } = def;
+  const { scenario, provinces, cities, coastline, coastlineHd, land, rivers, lakes, terrain } = def;
   need(scenario && typeof scenario === 'object', 'scenario: missing object');
   need(Array.isArray(provinces) && provinces.length > 0, 'provinces: non-empty array required');
   need(Array.isArray(cities), 'cities: array required');
   need(coastline === undefined || Array.isArray(coastline), 'coastline: array when present');
+  need(coastlineHd === undefined || Array.isArray(coastlineHd), 'coastlineHd: array when present');
   if (violations.length > 0) throw new ScenarioError('validate', violations);
 
   need(isId(scenario.id), 'scenario.id: invalid');
@@ -71,16 +72,22 @@ export function validateScenario(def) {
     provinceIds.add(p.id);
   }
 
-  for (const seg of coastline ?? []) {
-    need(isId(seg.id), `coastline.id invalid: ${seg.id}`);
-    need(seg.scenarioId === scenario.id, `coastline ${seg.id}: scenario mismatch`);
-    need(
-      Array.isArray(seg.points) &&
-        seg.points.length >= 2 &&
-        seg.points.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
-      `coastline ${seg.id}: points must be [lon, lat] pairs`,
-    );
-  }
+  const checkPolylineList = (list, label) => {
+    for (const seg of list ?? []) {
+      need(isId(seg.id), `${label}.id invalid: ${seg.id}`);
+      need(seg.scenarioId === scenario.id, `${label} ${seg.id}: scenario mismatch`);
+      need(
+        Array.isArray(seg.points) &&
+          seg.points.length >= 2 &&
+          seg.points.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
+        `${label} ${seg.id}: points must be [lon, lat] pairs`,
+      );
+    }
+  };
+
+  checkPolylineList(coastline, 'coastline');
+  // HD twin shares the exact shape (LOD differs, contract does not).
+  checkPolylineList(coastlineHd, 'coastlineHd');
 
   for (const poly of land ?? []) {
     need(isId(poly.id), `land.id invalid: ${poly.id}`);

@@ -17,6 +17,7 @@ const scenario = load('data/scenarios/1326/scenario.json');
 const provinces = load('data/scenarios/1326/provinces.json');
 const cities = load('data/scenarios/1326/cities.json');
 const coastline = load('data/scenarios/1326/coastline.json');
+const coastlineHd = load('data/scenarios/1326/coastline-hd.json');
 const land = load('data/scenarios/1326/land.json');
 const rivers = load('data/scenarios/1326/rivers.json');
 const lakes = load('data/scenarios/1326/lakes.json');
@@ -73,6 +74,19 @@ describe('1326 seed contracts', () => {
       }
     }
     for (const lake of lakes) check(landSchema, lake, `lake ${lake.id}`);
+  });
+  it('HD coastline dwarfs the base layer and stays in bounds', () => {
+    const coastlineSchema = load('docs/contracts/coastline.schema.json');
+    const { west, south, east, north } = scenario.mapScope.bounds;
+    const basePts = coastline.reduce((n, s) => n + s.points.length, 0);
+    const hdPts = coastlineHd.reduce((n, s) => n + s.points.length, 0);
+    assert.ok(hdPts > basePts * 5, `HD should dwarf base: ${hdPts} vs ${basePts}`);
+    for (const seg of coastlineHd) {
+      check(coastlineSchema, seg, `hd ${seg.id}`);
+      for (const [lon, lat] of seg.points) {
+        assert.ok(lon >= west && lon <= east && lat >= south && lat <= north, `out of bounds: ${lon},${lat}`);
+      }
+    }
   });
   it('coastline is real data inside scenario bounds', () => {
     const { west, south, east, north } = scenario.mapScope.bounds;
