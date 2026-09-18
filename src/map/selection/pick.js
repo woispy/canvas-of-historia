@@ -5,7 +5,7 @@ import { project } from '../camera/camera.js';
 
 export function unproject(camera, width, height, [x, y]) {
   const [cx, cy] = camera.center;
-  const latRef = (cy * Math.PI) / 180;
+  const latRef = (((camera.refLat ?? cy)) * Math.PI) / 180;
   const lon = cx + (x - width / 2) / (camera.scale * Math.cos(latRef));
   const lat = cy - (y - height / 2) / camera.scale;
   return [lon, lat];

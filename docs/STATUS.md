@@ -19,6 +19,8 @@ Phase 4 terrain done (green, 44/44): Terrarium DEM z7 → 192x72 elevation grid
 (-4120..3517m), hillshaded relief tint clipped to land.
 Details: `docs/work-log/2026-09-18-commit-hydro.md`, `2026-09-18-dem-terrain.md`.
 Next: Phase 5 WebGPU renderer or Phase 7 economy — user picks.
+Camera (2026-09-19): bounds-fit boot centering, wheel zoom, drag pan, HUD +/−,
+fixed-parallel projection (zero-drift). Tests 48/48.
 
 ## Done
 

@@ -14,7 +14,7 @@ import lakes from '../data/scenarios/1326/lakes.json';
 import terrain from '../data/scenarios/1326/terrain-grid.json';
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
-import { createCamera } from './map/camera/camera.js';
+import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
@@ -36,10 +36,6 @@ const seedReader = async (rel) => {
   throw new Error(`unknown asset: ${rel}`);
 };
 
-function fitScale(width, height) {
-  return Math.min(width, height) / 9;
-}
-
 export async function boot(rootElement, opts = {}) {
   const el = rootElement ?? (typeof document !== 'undefined' ? document.getElementById('app') : null);
   if (!el) throw new Error('coh: #app root element missing');
@@ -60,7 +56,8 @@ export async function boot(rootElement, opts = {}) {
   el.appendChild(canvas);
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
-  const camera = createCamera({ scale: opts.scale ?? fitScale(width, height) });
+  // Camera fits the scenario bounds, so the full theater is centered on boot.
+  let camera = fitCamera(session.scenario.mapScope.bounds, width, height);
   const snapshot = extractSnapshot(session);
   const draw = (s) =>
     renderCanvas2D(ctx, width, height, buildDisplayList(extractSnapshot(s), camera, width, height));
@@ -75,7 +72,8 @@ export async function boot(rootElement, opts = {}) {
     hud.innerHTML =
       `<strong>${fmtDate(current.state.time)}</strong>` +
       `<span>Tick ${current.state.tick} · Treasury ${current.state.treasury}</span>` +
-      `<button id="advance">+1 month</button>`;
+      `<button id="advance">+1 month</button>` +
+      `<button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button>`;
     feed.innerHTML = current.state.log
       .map((e) => `<div><span>${e.date}</span><p>${e.text}</p></div>`)
       .join('');
@@ -84,13 +82,67 @@ export async function boot(rootElement, opts = {}) {
       draw(current);
       renderHud();
     });
+    const zoomCenter = (factor) => {
+      camera = zoomAt(camera, width, height, width / 2, height / 2, factor);
+      draw(current);
+    };
+    hud.querySelector('#zin').addEventListener('click', () => zoomCenter(1.5));
+    hud.querySelector('#zout').addEventListener('click', () => zoomCenter(1 / 1.5));
   };
   renderHud();
-  canvas.style.cursor = 'crosshair';
-  canvas.addEventListener('click', (event) => {
+  canvas.style.cursor = 'grab';
+
+  const toLocal = (event) => {
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    return [event.clientX - rect.left, event.clientY - rect.top];
+  };
+
+  // Wheel zoom anchors the world point under the cursor.
+  canvas.addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault();
+      const [x, y] = toLocal(event);
+      camera = zoomAt(camera, width, height, x, y, event.deltaY < 0 ? 1.25 : 1 / 1.25);
+      draw(current);
+    },
+    { passive: false },
+  );
+
+  // Drag pans. A click without drag still selects (moved < 4px).
+  let drag = null;
+  let suppressClick = false;
+  canvas.addEventListener('pointerdown', (event) => {
+    drag = { x: event.clientX, y: event.clientY, moved: false };
+    canvas.setPointerCapture(event.pointerId);
+    canvas.style.cursor = 'grabbing';
+  });
+  canvas.addEventListener('pointermove', (event) => {
+    if (!drag) return;
+    const dx = event.clientX - drag.x;
+    const dy = event.clientY - drag.y;
+    if (Math.abs(event.clientX - drag.x) + Math.abs(event.clientY - drag.y) > 4) drag.moved = true;
+    if (drag.moved) {
+      camera = panBy(camera, width, height, dx, dy);
+      drag.x = event.clientX;
+      drag.y = event.clientY;
+      draw(current);
+    }
+  });
+  const endDrag = () => {
+    suppressClick = drag?.moved === true;
+    drag = null;
+    canvas.style.cursor = 'grab';
+  };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  canvas.addEventListener('click', (event) => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
+    const [x, y] = toLocal(event);
     // Markers win over provinces (cities sit on top of land).
     const marker = pickMarker(snapshot, camera, width, height, x, y);
     if (marker) {
