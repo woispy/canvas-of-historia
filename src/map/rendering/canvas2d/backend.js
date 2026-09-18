@@ -3,6 +3,80 @@
 
 import { STYLE_25D_V1 as S } from '../style.js';
 
+// Elevation ramp stops: [meters, r, g, b]. Sea cells stay transparent
+// (the tint is clipped to land polygons anyway; this avoids edge bleed).
+const TERRAIN_RAMP = [
+  [0, 122, 142, 96],
+  [300, 148, 150, 110],
+  [900, 172, 160, 128],
+  [1800, 196, 182, 158],
+  [2800, 224, 220, 206],
+  [4000, 242, 243, 238],
+];
+
+function rampColor(elev) {
+  for (let i = 1; i < TERRAIN_RAMP.length; i++) {
+    if (elev <= TERRAIN_RAMP[i][0]) {
+      const [e0, ...c0] = TERRAIN_RAMP[i - 1];
+      const [e1, ...c1] = TERRAIN_RAMP[i];
+      const t = (elev - e0) / (e1 - e0);
+      return [0, 1, 2].map((k) => Math.round(c0[k] + (c1[k] - c0[k]) * t));
+    }
+  }
+  return TERRAIN_RAMP[TERRAIN_RAMP.length - 1].slice(1);
+}
+
+function paintTerrainTint(ctx, cmd) {
+  const g = cmd.grid;
+  const off = document.createElement('canvas');
+  off.width = g.cols;
+  off.height = g.rows;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(g.cols, g.rows);
+  const cellLon = (g.bounds.east - g.bounds.west) / g.cols;
+  const cellLat = (g.bounds.north - g.bounds.south) / g.rows;
+  const at = (col, row) => {
+    const c = Math.max(0, Math.min(g.cols - 1, col));
+    const r = Math.max(0, Math.min(g.rows - 1, row));
+    return g.values[r * g.cols + c];
+  };
+  for (let row = 0; row < g.rows; row++) {
+    const lat = g.bounds.north - ((row + 0.5) / g.rows) * (g.bounds.north - g.bounds.south);
+    const mx = 111320 * Math.cos((lat * Math.PI) / 180) * cellLon;
+    const my = 110540 * cellLat;
+    for (let col = 0; col < g.cols; col++) {
+      const i = (row * g.cols + col) * 4;
+      const e = at(col, row);
+      if (e < 0) {
+        img.data[i + 3] = 0;
+        continue;
+      }
+      const dzdx = (at(col + 1, row) - at(col - 1, row)) / (2 * mx);
+      const dzdy = (at(col, row + 1) - at(col, row - 1)) / (2 * my);
+      const shade = Math.max(0, Math.min(1, (-dzdx * -0.5 + -dzdy * -0.5 + 0.707) / 1.414));
+      const light = 0.55 + 0.45 * shade;
+      const [r, gg, b] = rampColor(e);
+      img.data[i] = Math.min(255, r * light);
+      img.data[i + 1] = Math.min(255, gg * light);
+      img.data[i + 2] = Math.min(255, b * light);
+      img.data[i + 3] = 255;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  ctx.save();
+  ctx.beginPath();
+  for (const ring of cmd.landRings) {
+    ctx.moveTo(ring[0][0], ring[0][1]);
+    for (let k = 1; k < ring.length; k++) ctx.lineTo(ring[k][0], ring[k][1]);
+    ctx.closePath();
+  }
+  ctx.clip('evenodd');
+  ctx.globalAlpha = 0.55;
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(off, cmd.x, cmd.y, cmd.w, cmd.h);
+  ctx.restore();
+}
+
 function tracePath(ctx, pts) {
   ctx.beginPath();
   ctx.moveTo(pts[0][0], pts[0][1]);
@@ -63,6 +137,10 @@ export function renderCanvas2D(ctx, width, height, commands) {
         }
         ctx.fill('evenodd');
         ctx.restore();
+        break;
+      }
+      case 'terrain-tint': {
+        paintTerrainTint(ctx, cmd);
         break;
       }
       case 'lake-fill': {

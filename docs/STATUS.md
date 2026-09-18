@@ -15,8 +15,10 @@ Byzantine AI reaction, determinism proven. Slice S1–S4 exit criteria met.
 Git: fresh root commit pushed to GitHub (mirror).
 Phase 4 started (green, 42/42): NE 10m rivers (20 runs) + lakes (6 polys),
 rendered as new layers; 50m scripts retired.
-Details: `docs/work-log/2026-09-18-s4-tick.md`, `2026-09-18-commit-hydro.md`.
-Next: Phase 4 remainder (DEM/terrain) or Phase 7 economy — user picks.
+Phase 4 terrain done (green, 44/44): Terrarium DEM z7 → 192x72 elevation grid
+(-4120..3517m), hillshaded relief tint clipped to land.
+Details: `docs/work-log/2026-09-18-commit-hydro.md`, `2026-09-18-dem-terrain.md`.
+Next: Phase 5 WebGPU renderer or Phase 7 economy — user picks.
 
 ## Done
 

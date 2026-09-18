@@ -13,7 +13,10 @@
     "gis:land": "npm run gis:fetch && npm run gis:build-land",
     "gis:fetch-hydro": "node tools/gis/fetch-ne-hydro.js",
     "gis:build-hydro": "node tools/gis/build-hydro.js",
-    "gis:hydro": "npm run gis:fetch-hydro && npm run gis:build-hydro"
+    "gis:hydro": "npm run gis:fetch-hydro && npm run gis:build-hydro",
+    "gis:fetch-dem": "node tools/gis/fetch-dem.js",
+    "gis:build-terrain": "node tools/gis/build-terrain.js",
+    "gis:terrain": "npm run gis:fetch-dem && npm run gis:build-terrain"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

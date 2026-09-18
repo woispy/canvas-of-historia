@@ -20,6 +20,7 @@ const coastline = load('data/scenarios/1326/coastline.json');
 const land = load('data/scenarios/1326/land.json');
 const rivers = load('data/scenarios/1326/rivers.json');
 const lakes = load('data/scenarios/1326/lakes.json');
+const terrain = load('data/scenarios/1326/terrain-grid.json');
 
 function check(schema, data, label) {
   let valid = compiled.get(schema.$id); if (!valid) { valid = ajv.compile(schema); compiled.set(schema.$id, valid); }
@@ -51,6 +52,13 @@ describe('1326 seed contracts', () => {
         }
       }
     }
+  });
+  it('terrain grid matches schema with sane dimensions and range', () => {
+    const terrainSchema = load('docs/contracts/terrain.schema.json');
+    check(terrainSchema, terrain, 'terrain');
+    assert.equal(terrain.values.length, terrain.cols * terrain.rows);
+    assert.ok(terrain.min < 0 && terrain.max > 2000, `expected sea floor + high peaks, got ${terrain.min}..${terrain.max}`);
+    assert.deepEqual(terrain.bounds, scenario.mapScope.bounds);
   });
   it('rivers reuse the coastline polyline shape, lakes the land polygon shape', () => {
     const coastlineSchema = load('docs/contracts/coastline.schema.json');

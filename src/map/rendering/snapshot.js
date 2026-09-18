@@ -21,5 +21,6 @@ export function extractSnapshot(session) {
   const land = (session.world.land ?? []).map((poly) => ({ id: poly.id, rings: poly.rings }));
   const rivers = (session.world.rivers ?? []).map((r) => ({ id: r.id, points: r.points }));
   const lakes = (session.world.lakes ?? []).map((lake) => ({ id: lake.id, rings: lake.rings }));
-  return Object.freeze({ provinces, coastline, markers, land, rivers, lakes });
+  const terrain = session.world.terrain ?? null;
+  return Object.freeze({ provinces, coastline, markers, land, rivers, lakes, terrain });
 }

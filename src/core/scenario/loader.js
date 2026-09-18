@@ -4,7 +4,7 @@
 
 export async function loadScenario(readJson, scenarioId) {
   const base = `data/scenarios/${scenarioId}`;
-  const [scenario, provinces, cities, coastline, land, rivers, lakes] = await Promise.all([
+  const [scenario, provinces, cities, coastline, land, rivers, lakes, terrain] = await Promise.all([
     readJson(`${base}/scenario.json`),
     readJson(`${base}/provinces.json`),
     readJson(`${base}/cities.json`),
@@ -12,6 +12,7 @@ export async function loadScenario(readJson, scenarioId) {
     readJson(`${base}/land.json`),
     readJson(`${base}/rivers.json`),
     readJson(`${base}/lakes.json`),
+    readJson(`${base}/terrain-grid.json`),
   ]);
-  return { scenario, provinces, cities, coastline, land, rivers, lakes };
+  return { scenario, provinces, cities, coastline, land, rivers, lakes, terrain };
 }

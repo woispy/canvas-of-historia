@@ -20,6 +20,7 @@ const required = [
   'docs/contracts/city.schema.json',
   'docs/contracts/land.schema.json',
   'docs/contracts/coastline.schema.json',
+  'docs/contracts/terrain.schema.json',
   'docs/roadmap/VERTICAL-SLICE-1326.md',
   'docs/vision/MASTER-BRIEF-v1.md',
   'data/scenarios/1326',

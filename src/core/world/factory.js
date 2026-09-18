@@ -28,5 +28,8 @@ export function bootstrapWorld(def) {
       Object.freeze({ ...lake, rings: Object.freeze(lake.rings.map((ring) => freezePts(ring))) }),
     ),
   );
-  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, land, rivers, lakes });
+  const terrain = def.terrain
+    ? Object.freeze({ ...def.terrain, values: Object.freeze([...def.terrain.values]) })
+    : null;
+  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, land, rivers, lakes, terrain });
 }

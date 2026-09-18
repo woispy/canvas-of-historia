@@ -20,6 +20,22 @@ export function buildDisplayList(snapshot, camera, width, height) {
       rings: lake.rings.map((ring) => projectRing(camera, width, height, ring)),
     });
   }
+  if (snapshot.terrain) {
+    const t = snapshot.terrain;
+    const [tx0, ty0] = project(camera, width, height, [t.bounds.west, t.bounds.north]);
+    const [tx1, ty1] = project(camera, width, height, [t.bounds.east, t.bounds.south]);
+    commands.push({
+      type: 'terrain-tint',
+      grid: t,
+      x: tx0,
+      y: ty0,
+      w: tx1 - tx0,
+      h: ty1 - ty0,
+      landRings: (snapshot.land ?? []).flatMap((poly) =>
+        poly.rings.map((ring) => projectRing(camera, width, height, ring)),
+      ),
+    });
+  }
   for (const seg of snapshot.coastline) {
     commands.push({
       type: 'coastline',

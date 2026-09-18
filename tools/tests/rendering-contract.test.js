@@ -43,6 +43,7 @@ describe('rendering contract (S2)', () => {
     assert.ok(kinds.filter((k) => k === 'land-fill').length >= 1, 'landmass rendered');
     assert.ok(kinds.filter((k) => k === 'lake-fill').length >= 1, 'lakes rendered');
     assert.ok(kinds.filter((k) => k === 'river').length >= 1, 'rivers rendered');
+    assert.ok(kinds.filter((k) => k === 'terrain-tint').length >= 1, 'terrain tint present');
     assert.ok(kinds.filter((k) => k === 'coastline').length >= 1, 'coastline commands present');
     assert.equal(kinds.filter((k) => k === 'province-fill').length, 6);
     assert.equal(kinds.filter((k) => k === 'province-border').length, 6);

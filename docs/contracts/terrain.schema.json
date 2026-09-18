@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://canvas-of-historia/docs/contracts/terrain.schema.json",
+  "title": "Terrain elevation grid (v1)",
+  "description": "DEM-derived elevation grid over the scenario bounds. Row-major values, one per cell. Slice tint layer; full terrain tiles arrive Phase 5.",
+  "type": "object",
+  "required": ["scenarioId", "cols", "rows", "bounds", "min", "max", "values"],
+  "additionalProperties": false,
+  "properties": {
+    "scenarioId": { "type": "string" },
+    "source": { "type": "string" },
+    "cols": { "type": "integer", "minimum": 1 },
+    "rows": { "type": "integer", "minimum": 1 },
+    "bounds": {
+      "type": "object",
+      "required": ["west", "south", "east", "north"],
+      "additionalProperties": false,
+      "properties": {
+        "west": { "type": "number" },
+        "south": { "type": "number" },
+        "east": { "type": "number" },
+        "north": { "type": "number" }
+      }
+    },
+    "min": { "type": "number" },
+    "max": { "type": "number" },
+    "values": { "type": "array", "minItems": 1, "items": { "type": "number" } }
+  }
+}
