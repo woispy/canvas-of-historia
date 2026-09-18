@@ -48,27 +48,41 @@ describe('rendering contract (S2)', () => {
     assert.ok(nearPts > farPts * 5, `HD denser up close: ${nearPts} vs ${farPts}`);
   });
 
-  it('shallow bands paint before land, crisp stroke after rivers', async () => {
+  it('shallow bands paint before land, shore ribbon and crisp stroke after rivers', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
     const kinds = buildDisplayList(snap, createCamera({ scale: 100 }), W, H).map((c) => c.type);
     const bands = kinds.indexOf('coast-bands');
     const land = kinds.indexOf('land-fill');
+    const shore = kinds.indexOf('coast-shore');
     const crisp = kinds.indexOf('coastline');
     const river = kinds.indexOf('river');
-    assert.ok(bands !== -1 && land !== -1 && crisp !== -1, 'all coastal stages present');
+    assert.ok(bands !== -1 && land !== -1 && shore !== -1 && crisp !== -1, 'all coastal stages present');
     assert.ok(bands < land, 'bands under land (sea-side-only illusion)');
-    assert.ok(river < crisp, 'crisp stroke on top');
+    assert.ok(river < shore && shore < crisp, 'shore ribbon then crisp stroke on top');
+  });
+
+  it('band widths grow with zoom (world degrees, not px)', async () => {
+    const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
+    const snap = extractSnapshot(session);
+    const widthsAt = (scale) =>
+      buildDisplayList(snap, createCamera({ scale }), W, H).find((c) => c.type === 'coast-bands').widths;
+    const far = widthsAt(100);
+    const near = widthsAt(800);
+    assert.equal(far.length, 3);
+    assert.ok(near.every((w, i) => w > far[i]), `widths scale with zoom: ${far} vs ${near}`);
   });
 
   it('smoothing preserves endpoints and softens corners', () => {
     const jagged = [[0, 0], [10, 0], [10, 10], [20, 10]];
-    const smooth = smoothPolyline(jagged);
-    assert.deepEqual(smooth[0], [0, 0]);
-    assert.deepEqual(smooth[smooth.length - 1], [20, 10]);
+    const once = smoothPolyline(jagged);
+    const twice = smoothPolyline(once);
+    assert.deepEqual(twice[0], [0, 0]);
+    assert.deepEqual(twice[twice.length - 1], [20, 10]);
     assert.ok(
-      maxTurningAngle(smooth) < maxTurningAngle(jagged),
-      'corners are softer after Chaikin',
+      maxTurningAngle(twice) <= maxTurningAngle(once) &&
+        maxTurningAngle(once) < maxTurningAngle(jagged),
+      'each Chaikin pass softens corners',
     );
   });
   it('display list covers sea, coastline, fills, borders, markers', async () => {

@@ -25,6 +25,8 @@ HD coastline (2026-09-19, green 50/50): OSM 24.6k pts + zoom LOD (HD≥250px/°)
 ODbL credit in-app. Bundle 1.7MB — binary packing with Phase 5.
 Coastal paint (2026-09-19, green 52/52): sea-side-only shallows, Chaikin
 corner softening, crisp top stroke. True single-source coast fix: Phase 5.
+Shore ribbon (2026-09-19, green 53/53): world-degree band widths + land-toned
+shore ribbon + 2-pass smoothing. Km-scale deltas still flagged for Phase 5.
 
 ## Done
 

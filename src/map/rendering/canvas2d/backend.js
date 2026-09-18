@@ -103,14 +103,25 @@ export function renderCanvas2D(ctx, width, height, commands) {
       }
       case 'coast-bands': {
         // Painted before land: the fill covers the land-side half, so the
-        // shallow effect survives only seaward.
-        for (const band of S.sea.bands) {
+        // shallow effect survives only seaward. Widths arrive in px,
+        // computed from world degrees in displayList.
+        const widths = cmd.widths ?? S.sea.bands.map((b) => b.widthDeg * 1000);
+        S.sea.bands.forEach((band, i) => {
           ctx.strokeStyle = band.color;
-          ctx.lineWidth = band.width;
+          ctx.lineWidth = widths[i] ?? 1;
           ctx.lineJoin = 'round';
           tracePolyline(ctx, cmd.points);
           ctx.stroke();
-        }
+        });
+        break;
+      }
+      case 'coast-shore': {
+        // Land-toned ribbon over the mismatch zone, under the crisp stroke.
+        ctx.strokeStyle = S.shore.color;
+        ctx.lineWidth = cmd.width ?? 2;
+        ctx.lineJoin = 'round';
+        tracePolyline(ctx, cmd.points);
+        ctx.stroke();
         break;
       }
       case 'coastline': {

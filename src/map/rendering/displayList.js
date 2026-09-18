@@ -4,6 +4,7 @@
 
 import { project, projectRing } from '../camera/camera.js';
 import { smoothPolyline } from './smooth.js';
+import { STYLE_25D_V1 as STYLE } from './style.js';
 
 // LOD rule: the OSM high-detail twin takes over once points would land
 // denser than ~4px apart. Below that the NE 10m base layer is identical
@@ -15,12 +16,26 @@ export function buildDisplayList(snapshot, camera, width, height) {
   const hd = camera.scale >= HD_MIN_SCALE && (snapshot.coastlineHd ?? []).length > 0;
   const coastSource = hd ? snapshot.coastlineHd : snapshot.coastline;
   const coastDetail = hd ? 'hd' : 'base';
-  const smoothCoast = (seg) => smoothPolyline(seg.points.map((pt) => project(camera, width, height, pt)));
-  // Shallow bands paint FIRST (right after sea): the opaque land fill drawn
-  // later covers their land-side half, so whiteness appears only on the sea
-  // side. The crisp stroke paints LAST, on top of everything coastal.
+  const refLat = (((camera.refLat ?? camera.center[1])) * Math.PI) / 180;
+  const pxPerDeg = camera.scale * Math.cos(refLat);
+  const bandWidths = STYLE.sea.bands.map((b) => Math.max(1, b.widthDeg * pxPerDeg));
+  const shoreWidth = Math.max(1.5, STYLE.shore.widthDeg * pxPerDeg);
+  // Two Chaikin passes: HD data stays sharp enough to read, corners stop
+  // looking drafted. Smoothing is render-time only; data is untouched.
+  const smoothCoast = (seg) =>
+    smoothPolyline(
+      smoothPolyline(seg.points.map((pt) => project(camera, width, height, pt))),
+    );
+  // Paint order: sea → bands → land (covers bands' land half) → … → shore
+  // ribbon (covers mismatch slivers both sides) → crisp stroke on top.
   for (const seg of coastSource) {
-    commands.push({ type: 'coast-bands', id: seg.id, detail: coastDetail, points: smoothCoast(seg) });
+    commands.push({
+      type: 'coast-bands',
+      id: seg.id,
+      detail: coastDetail,
+      widths: bandWidths,
+      points: smoothCoast(seg),
+    });
   }
   for (const poly of snapshot.land ?? []) {
     commands.push({
@@ -60,7 +75,9 @@ export function buildDisplayList(snapshot, camera, width, height) {
     });
   }
   for (const seg of coastSource) {
-    commands.push({ type: 'coastline', id: seg.id, detail: coastDetail, points: smoothCoast(seg) });
+    const pts = smoothCoast(seg);
+    commands.push({ type: 'coast-shore', id: seg.id, detail: coastDetail, width: shoreWidth, points: pts });
+    commands.push({ type: 'coastline', id: seg.id, detail: coastDetail, points: pts });
   }
   for (const p of snapshot.provinces) {
     commands.push({

@@ -7,12 +7,19 @@ export const STYLE_25D_V1 = Object.freeze({
   sea: Object.freeze({
     deep: '#5f97ba',
     shallow: '#cfe2ee',
-    // depth bands drawn outward from the coastline authority layer
+    // Depth bands in WORLD degrees (not px): constant geographic width, so the
+    // shallows grow with zoom like real water and always dwarf source mismatch.
     bands: Object.freeze([
-      { width: 6, color: 'rgba(235, 246, 252, 0.55)' },
-      { width: 14, color: 'rgba(235, 246, 252, 0.30)' },
-      { width: 28, color: 'rgba(235, 246, 252, 0.12)' },
+      { widthDeg: 0.008, color: 'rgba(235, 246, 252, 0.55)' },
+      { widthDeg: 0.018, color: 'rgba(235, 246, 252, 0.30)' },
+      { widthDeg: 0.035, color: 'rgba(235, 246, 252, 0.12)' },
     ]),
+  }),
+  // Land-toned shore ribbon (world degrees) hugging the OSM line: hides the
+  // 10m-fill/OSM-stroke mismatch on both sides, reads as beach/surf.
+  shore: Object.freeze({
+    color: '#b3ac93',
+    widthDeg: 0.006,
   }),
   land: Object.freeze({
     base: '#9a957e',
