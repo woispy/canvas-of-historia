@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas of Historia</title>
+    <!-- SLICE SCAFFOLDING: minimal panel styling. A real UI system (Phase 6+)
+         replaces this with themed components. -->
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
+      #app { position: fixed; inset: 0; }
+      #panel { position: fixed; top: 12px; right: 12px; width: 280px; z-index: 10; }
+      #panel .panel { background: rgba(248, 246, 238, 0.96); border: 1px solid #33494f; border-radius: 8px; padding: 12px 14px; box-shadow: 0 4px 18px rgba(20, 40, 55, 0.35); }
+      #panel h2 { margin: 0 0 8px; font-size: 16px; color: #22333a; }
+      #panel dl { margin: 0; }
+      #panel dl div { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; font-size: 13px; }
+      #panel dt { color: #5a6b72; }
+      #panel dd { margin: 0; color: #22333a; text-align: right; }
+      #hud { position: fixed; top: 12px; left: 12px; z-index: 10; display: flex; gap: 10px; align-items: center; background: rgba(248, 246, 238, 0.96); border: 1px solid #33494f; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #22333a; }
+      #hud button { cursor: pointer; }
+      #feed { position: fixed; left: 12px; bottom: 12px; z-index: 10; width: 340px; max-height: 30vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+      #feed div { background: rgba(248, 246, 238, 0.94); border: 1px solid #33494f; border-radius: 6px; padding: 6px 10px; font-size: 12px; color: #22333a; }
+      #feed span { color: #5a6b72; }
+      #feed p { margin: 2px 0 0; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="hud"></div>
+    <div id="feed"></div>
+    <div id="panel"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

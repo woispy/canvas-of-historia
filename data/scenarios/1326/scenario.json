@@ -1,0 +1,34 @@
+{
+  "id": "1326",
+  "name": "1326 — After the Fall of Bursa",
+  "startDate": { "year": 1326, "month": 4, "day": 7 },
+  "mapScope": {
+    "focus": "Anatolia and surrounding world",
+    "bounds": { "west": 26.0, "south": 36.0, "east": 42.0, "north": 42.0 }
+  },
+  "states": [
+    { "id": "ottomans", "name": "Ottoman Beylik", "capitalAnchorId": "bursa", "color": "#b03a2e" },
+    { "id": "byzantines", "name": "Byzantine Empire", "capitalAnchorId": "constantinople", "color": "#7d3c98" },
+    { "id": "karamanids", "name": "Karamanids", "capitalAnchorId": "larende", "color": "#1a7a6d" },
+    { "id": "germiyanids", "name": "Germiyanids", "capitalAnchorId": "kutahya", "color": "#c97a1b" }
+  ],
+  "anchors": [
+    { "id": "bursa", "name": "Bursa", "kind": "city", "lon": 29.06, "lat": 40.19 },
+    { "id": "nicaea", "name": "Nicaea (Iznik)", "kind": "city", "lon": 29.72, "lat": 40.43 },
+    { "id": "nicomedia", "name": "Nicomedia (Izmit)", "kind": "city", "lon": 29.93, "lat": 40.77 },
+    { "id": "constantinople", "name": "Constantinople", "kind": "city", "lon": 28.98, "lat": 41.01 },
+    { "id": "kutahya", "name": "Kutahya", "kind": "city", "lon": 29.98, "lat": 39.42 },
+    { "id": "ankara", "name": "Ankara", "kind": "city", "lon": 32.86, "lat": 39.93 },
+    { "id": "konya", "name": "Konya", "kind": "city", "lon": 32.48, "lat": 37.87 },
+    { "id": "larende", "name": "Larende (Karaman)", "kind": "city", "lon": 33.22, "lat": 37.18 },
+    { "id": "sivas", "name": "Sivas", "kind": "city", "lon": 37.02, "lat": 39.75 },
+    { "id": "erzurum", "name": "Erzurum", "kind": "city", "lon": 41.27, "lat": 39.9 },
+    { "id": "erzincan", "name": "Erzincan", "kind": "city", "lon": 39.49, "lat": 39.75 },
+    { "id": "malatya", "name": "Malatya", "kind": "city", "lon": 38.32, "lat": 38.35 },
+    { "id": "maras", "name": "Maras", "kind": "city", "lon": 36.92, "lat": 37.59 },
+    { "id": "elbistan", "name": "Elbistan", "kind": "city", "lon": 37.2, "lat": 38.21 },
+    { "id": "sis", "name": "Sis (Kozan)", "kind": "city", "lon": 35.81, "lat": 37.43 },
+    { "id": "aleppo", "name": "Aleppo", "kind": "city", "lon": 37.13, "lat": 36.2 },
+    { "id": "antioch", "name": "Antioch (Antakya)", "kind": "city", "lon": 36.16, "lat": 36.2 }
+  ]
+}

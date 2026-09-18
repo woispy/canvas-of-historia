@@ -1,0 +1,8 @@
+[
+  { "id": "bursa-city", "scenarioId": "1326", "name": "Bursa", "anchorId": "bursa", "provinceId": "bursa", "tier": "city", "development": 45, "confidence": "HIGH" },
+  { "id": "nicaea-city", "scenarioId": "1326", "name": "Nicaea", "anchorId": "nicaea", "provinceId": "nicaea", "tier": "city", "development": 50, "confidence": "HIGH" },
+  { "id": "nicomedia-city", "scenarioId": "1326", "name": "Nicomedia", "anchorId": "nicomedia", "provinceId": "nicomedia", "tier": "city", "development": 48, "confidence": "HIGH" },
+  { "id": "kutahya-town", "scenarioId": "1326", "name": "Kutahya", "anchorId": "kutahya", "provinceId": "kutahya", "tier": "town", "development": 30, "confidence": "MEDIUM" },
+  { "id": "konya-city", "scenarioId": "1326", "name": "Konya", "anchorId": "konya", "provinceId": "konya", "tier": "city", "development": 42, "confidence": "MEDIUM" },
+  { "id": "larende-town", "scenarioId": "1326", "name": "Larende", "anchorId": "larende", "provinceId": "larende", "tier": "town", "development": 28, "confidence": "MEDIUM" }
+]

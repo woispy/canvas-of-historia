@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://canvas-of-historia/docs/contracts/province.schema.json",
+  "title": "Province canonical record (v1)",
+  "description": "Canonical province geometry + identity + control. Geometry and topology are separate concerns (brief sections 20-21). Runtime store is SoA; this schema governs the canonical exchange form.",
+  "type": "object",
+  "required": ["id", "scenarioId", "ownerStateId", "boundaryStatus", "ring"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "scenarioId": { "type": "string" },
+    "name": { "type": "string" },
+    "ownerStateId": { "type": "string" },
+    "controllerStateId": { "type": "string" },
+    "boundaryStatus": {
+      "enum": ["confirmed-core", "frontier", "influence", "uncertain-extent"]
+    },
+    "confidence": {
+      "enum": ["VERY_HIGH", "HIGH", "MEDIUM", "LOW", "SPECULATIVE"]
+    },
+    "ring": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "array",
+        "prefixItems": [{ "type": "number" }, { "type": "number" }],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  }
+}

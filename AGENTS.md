@@ -1,0 +1,30 @@
+# Canvas of Historia — Agent Guide
+
+> This file is auto-loaded as project instructions for every agent.
+> Game brief arrives separately from the user; until then, no game code is written.
+
+## Project
+
+- Fresh start. Remote: `woispy/canvas-of-historia`. Summaries in Turkish; code and technical detail in English.
+- Reference project (READ-ONLY): `../opencode/historia-ai` — study its systems and docs, never copy files blindly, never commit there.
+- Historia AI continues separately and is unrelated to this repo's future.
+
+## Team
+
+- Orchestrator (primary `build` agent): splits work, dispatches subagents, merges results, owns `docs/STATUS.md`.
+- `@coder`: implements exactly one task per run. Never pushes to any remote.
+- `@analyst`: diagnoses failures, proposes the next 1-3 tasks. May write only to `docs/work-log/`.
+- `@reviewer`: PASS/RED contract and layering review. May write only to `docs/work-log/`.
+- `@local-assist`: quota-free local helper (Ollama `llama3.1:8b`) for summaries, status reports, and simple codebase questions. Escalates hard tasks instead of guessing. Needs `ollama serve` running.
+
+## Continuity discipline (mandatory for every run)
+
+1. Start by reading `docs/STATUS.md` (plus linked work-log entries if needed).
+2. End by appending a dated entry to `docs/work-log/YYYY-MM-DD-<slug>.md`: goal, changes, test results, open items.
+3. If project state changed, propose the `docs/STATUS.md` update; the orchestrator applies it.
+4. Bigger decisions go to `docs/adr/ADR-NNN-<slug>.md` and are referenced from `docs/STATUS.md`.
+
+## Local-first
+
+- All work and tests run locally (Node 24, npm). GitHub is mirror + backup; CI is added later when the project matures. See `docs/adr/ADR-001-local-first-workflow.md`.
+- Never push without explicit user approval. Never commit secrets (`*.env`, API keys, tokens).

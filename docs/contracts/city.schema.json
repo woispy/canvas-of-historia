@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://canvas-of-historia/docs/contracts/city.schema.json",
+  "title": "City record (v1)",
+  "description": "A city is a point + data, never a control-area polygon (brief section 15: historical city != administrative boundary). Visual tier drives LOD (brief section 26).",
+  "type": "object",
+  "required": ["id", "scenarioId", "anchorId", "provinceId", "tier"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "scenarioId": { "type": "string" },
+    "name": { "type": "string", "minLength": 1 },
+    "anchorId": { "type": "string" },
+    "provinceId": { "type": "string" },
+    "tier": {
+      "enum": ["village", "town", "city", "large-city", "capital", "metropolis"]
+    },
+    "development": { "type": "number", "minimum": 0 },
+    "confidence": {
+      "enum": ["VERY_HIGH", "HIGH", "MEDIUM", "LOW", "SPECULATIVE"]
+    }
+  }
+}

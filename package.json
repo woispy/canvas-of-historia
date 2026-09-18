@@ -1,0 +1,19 @@
+{
+  "name": "canvas-of-historia",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test \"tools/tests/**/*.test.js\"",
+    "gis:fetch": "node tools/gis/fetch-ne-land.js",
+    "gis:build-land": "node tools/gis/build-land.js",
+    "gis:land": "npm run gis:fetch && npm run gis:build-land"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "vite": "^8.1.1"
+  }
+}

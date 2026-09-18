@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vite/
+*.local
+.DS_Store
+# Raw source datasets (reproducible via pinned fetch scripts, never committed)
+data/sources/
+dev-server.log

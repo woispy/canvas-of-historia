@@ -1,0 +1,62 @@
+[
+  {
+    "id": "bursa",
+    "scenarioId": "1326",
+    "name": "Bursa",
+    "ownerStateId": "ottomans",
+    "controllerStateId": "ottomans",
+    "boundaryStatus": "confirmed-core",
+    "confidence": "HIGH",
+    "ring": [[28.75, 40.05], [29.35, 40.05], [29.35, 40.4], [28.75, 40.4], [28.75, 40.05]]
+  },
+  {
+    "id": "nicaea",
+    "scenarioId": "1326",
+    "name": "Nicaea",
+    "ownerStateId": "byzantines",
+    "controllerStateId": "byzantines",
+    "boundaryStatus": "confirmed-core",
+    "confidence": "HIGH",
+    "ring": [[29.55, 40.3], [29.95, 40.3], [29.95, 40.6], [29.55, 40.6], [29.55, 40.3]]
+  },
+  {
+    "id": "nicomedia",
+    "scenarioId": "1326",
+    "name": "Nicomedia",
+    "ownerStateId": "byzantines",
+    "controllerStateId": "byzantines",
+    "boundaryStatus": "confirmed-core",
+    "confidence": "HIGH",
+    "ring": [[29.7, 40.65], [30.1, 40.65], [30.1, 40.9], [29.7, 40.9], [29.7, 40.65]]
+  },
+  {
+    "id": "kutahya",
+    "scenarioId": "1326",
+    "name": "Kutahya",
+    "ownerStateId": "germiyanids",
+    "controllerStateId": "germiyanids",
+    "boundaryStatus": "frontier",
+    "confidence": "MEDIUM",
+    "ring": [[29.7, 39.2], [30.3, 39.2], [30.3, 39.65], [29.7, 39.65], [29.7, 39.2]]
+  },
+  {
+    "id": "konya",
+    "scenarioId": "1326",
+    "name": "Konya",
+    "ownerStateId": "karamanids",
+    "controllerStateId": "karamanids",
+    "boundaryStatus": "confirmed-core",
+    "confidence": "MEDIUM",
+    "ring": [[32.2, 37.65], [32.8, 37.65], [32.8, 38.1], [32.2, 38.1], [32.2, 37.65]]
+  },
+  {
+    "id": "larende",
+    "scenarioId": "1326",
+    "name": "Larende",
+    "ownerStateId": "karamanids",
+    "controllerStateId": "karamanids",
+    "boundaryStatus": "confirmed-core",
+    "confidence": "MEDIUM",
+    "ring": [[32.95, 36.95], [33.5, 36.95], [33.5, 37.4], [32.95, 37.4], [32.95, 36.95]]
+  }
+]
