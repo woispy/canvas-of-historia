@@ -29,6 +29,8 @@ Shore ribbon (2026-09-19, green 53/53): world-degree band widths + land-toned
 shore ribbon + 2-pass smoothing. Km-scale deltas still flagged for Phase 5.
 Coast truth pass (2026-09-19, green 53/53): 17° border artifact removed,
 sea-tone carve (un-bridges straits), tan ribbon gone, edge vignette.
+World base (2026-09-19, green 53/53): ADR-005 — global NE land (2042 polys),
+no bbox clipping, meter-RDP, pole fix; OSM polygonizer deleted.
 
 ## Done
 

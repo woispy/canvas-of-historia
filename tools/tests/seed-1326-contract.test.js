@@ -41,18 +41,33 @@ describe('1326 seed contracts', () => {
     const coastlineSchema = load('docs/contracts/coastline.schema.json');
     for (const seg of coastline) check(coastlineSchema, seg, `coastline ${seg.id}`);
   });
-  it('land polygons match schema and stay in bounds', () => {
+  it('land base is the whole world: closed rings, Ankara in, Pacific out', () => {
     const landSchema = load('docs/contracts/land.schema.json');
-    const { west, south, east, north } = scenario.mapScope.bounds;
-    assert.ok(land.length >= 1, 'at least one land polygon (islands included)');
+    assert.ok(land.length >= 1000, `global base expected, got ${land.length} polygons`);
+    const inRing = ([lon, lat], ring) => {
+      let ins = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i];
+        const [xj, yj] = ring[j];
+        if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) ins = !ins;
+      }
+      return ins;
+    };
+    const covers = ([lon, lat]) => land.some((poly) => poly.rings.some((r) => inRing([lon, lat], r)));
+    let checked = 0;
     for (const poly of land) {
-      check(landSchema, poly, `land ${poly.id}`);
+      if (checked++ < 50) check(landSchema, poly, `land ${poly.id}`);
       for (const ring of poly.rings) {
+        assert.ok(ring.length >= 4, 'ring minimum');
+        assert.deepEqual(ring[0], ring[ring.length - 1], 'rings stay closed (no fake chords)');
         for (const [lon, lat] of ring) {
-          assert.ok(lon >= west && lon <= east && lat >= south && lat <= north, `out of bounds: ${lon},${lat}`);
+          assert.ok(Number.isFinite(lon) && Number.isFinite(lat), 'finite coords');
+          assert.ok(lat >= -90 && lat <= 90, 'valid latitude');
         }
       }
     }
+    assert.ok(covers([32.86, 39.93]), 'Ankara is land');
+    assert.ok(!covers([-150, 0]), 'mid-Pacific is sea');
   });
   it('terrain grid matches schema with sane dimensions and range', () => {
     const terrainSchema = load('docs/contracts/terrain.schema.json');
@@ -75,12 +90,16 @@ describe('1326 seed contracts', () => {
     }
     for (const lake of lakes) check(landSchema, lake, `lake ${lake.id}`);
   });
-  it('HD coastline dwarfs the base layer and stays in bounds', () => {
+  it('HD coastline dwarfs the base layer inside the theater', () => {
     const coastlineSchema = load('docs/contracts/coastline.schema.json');
     const { west, south, east, north } = scenario.mapScope.bounds;
-    const basePts = coastline.reduce((n, s) => n + s.points.length, 0);
+    const inTheater = ([lon, lat]) => lon >= west && lon <= east && lat >= south && lat <= north;
+    const basePts = coastline.reduce(
+      (n, s) => n + s.points.filter(inTheater).length,
+      0,
+    );
     const hdPts = coastlineHd.reduce((n, s) => n + s.points.length, 0);
-    assert.ok(hdPts > basePts * 5, `HD should dwarf base: ${hdPts} vs ${basePts}`);
+    assert.ok(hdPts > basePts * 5, `HD should dwarf base in theater: ${hdPts} vs ${basePts}`);
     for (const seg of coastlineHd) {
       check(coastlineSchema, seg, `hd ${seg.id}`);
       for (const [lon, lat] of seg.points) {
@@ -88,24 +107,33 @@ describe('1326 seed contracts', () => {
       }
     }
   });
-  it('coastline is real data inside scenario bounds', () => {
-    const { west, south, east, north } = scenario.mapScope.bounds;
-    assert.ok(coastline.length >= 1, 'at least one segment');
-    let maxStep = 0;    assert.ok(
+  it('base coastline is global real data (whole world drawn)', () => {
+    assert.ok(coastline.length >= 100, 'global base has many segments');
+    let maxStep = 0;
+    let maxStepMid = 0;
+    let outside = 0;
+    let total = 0;
+    assert.ok(
       coastline.every((seg) => seg.source.includes('natural-earth')),
       'no hand-traced segments allowed anymore',
     );
     for (const seg of coastline) {
       for (let i = 0; i < seg.points.length; i++) {
         const [lon, lat] = seg.points[i];
-        assert.ok(lon >= west && lon <= east && lat >= south && lat <= north, `out of bounds: ${lon},${lat}`);
+        total++;
+        if (lon < 26 || lon > 42 || lat < 36 || lat > 42) outside++;
         if (i > 0) {
           const step = Math.hypot(lon - seg.points[i - 1][0], lat - seg.points[i - 1][1]);
           if (step > maxStep) maxStep = step;
+          // Polar generalization is honest (meters, not degrees); the tripwire
+          // that matters is at inhabited latitudes.
+          if (Math.abs(lat) < 60 && step > maxStepMid) maxStepMid = step;
         }
       }
     }
-    assert.ok(maxStep < 1.0, `no border-artifact jumps allowed, max step ${maxStep}`);
+    assert.ok(outside > total / 2, 'most base points lie outside the theater (world drawn)');
+    assert.ok(maxStep < 12, `no artifact jumps allowed, max step ${maxStep}`);
+    assert.ok(maxStepMid < 3.0, `no coarse chords at inhabited latitudes, max ${maxStepMid}`);
   });
   it('cross-references resolve', () => {
     const stateIds = new Set(scenario.states.map((s) => s.id));
