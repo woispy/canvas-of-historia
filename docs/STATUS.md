@@ -27,6 +27,8 @@ Coastal paint (2026-09-19, green 52/52): sea-side-only shallows, Chaikin
 corner softening, crisp top stroke. True single-source coast fix: Phase 5.
 Shore ribbon (2026-09-19, green 53/53): world-degree band widths + land-toned
 shore ribbon + 2-pass smoothing. Km-scale deltas still flagged for Phase 5.
+Coast truth pass (2026-09-19, green 53/53): 17° border artifact removed,
+sea-tone carve (un-bridges straits), tan ribbon gone, edge vignette.
 
 ## Done
 

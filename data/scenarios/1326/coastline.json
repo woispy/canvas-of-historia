@@ -1,14 +1,10 @@
 [
   {
-    "id": "ne10m-coast-ne10m-land-0",
+    "id": "ne10m-coast-ne10m-land-0-0",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
-      [
-        35.9753,
-        36
-      ],
       [
         35.9484,
         36.0878
@@ -2964,15 +2960,15 @@
       [
         32.9261,
         41.8818
-      ],
-      [
-        33.2757,
-        42
-      ],
-      [
-        33.5909,
-        42
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "ne10m-coast-ne10m-land-0-1",
+    "scenarioId": "1326",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
+    "confidence": "HIGH",
+    "points": [
       [
         33.8735,
         41.9744
@@ -3000,15 +2996,15 @@
       [
         34.7986,
         41.9622
-      ],
-      [
-        34.8717,
-        42
-      ],
-      [
-        35.1125,
-        42
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "ne10m-coast-ne10m-land-0-2",
+    "scenarioId": "1326",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
+    "confidence": "HIGH",
+    "points": [
       [
         35.093,
         41.9467
@@ -3404,15 +3400,15 @@
       [
         41.7739,
         41.8216
-      ],
-      [
-        41.7578,
-        42
-      ],
-      [
-        28.0198,
-        42
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "ne10m-coast-ne10m-land-0-3",
+    "scenarioId": "1326",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
+    "confidence": "HIGH",
+    "points": [
       [
         28.0138,
         41.9827
@@ -3840,33 +3836,13 @@
       [
         26.0122,
         40.8244
-      ],
-      [
-        26,
-        40.8388
-      ],
-      [
-        26,
-        40.817
-      ],
-      [
-        26,
-        42
-      ],
-      [
-        42,
-        42
-      ],
-      [
-        42,
-        36
       ]
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-1",
+    "id": "ne10m-coast-ne10m-land-1-4",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -3960,15 +3936,15 @@
       [
         26.0828,
         39.0952
-      ],
-      [
-        26,
-        39.1056
-      ],
-      [
-        26,
-        39.285
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "ne10m-coast-ne10m-land-1-5",
+    "scenarioId": "1326",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
+    "confidence": "HIGH",
+    "points": [
       [
         26.0332,
         39.2827
@@ -4048,9 +4024,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-2",
+    "id": "ne10m-coast-ne10m-land-2-6",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4116,9 +4092,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-3",
+    "id": "ne10m-coast-ne10m-land-3-7",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4172,9 +4148,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-4",
+    "id": "ne10m-coast-ne10m-land-4-8",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4228,9 +4204,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-5",
+    "id": "ne10m-coast-ne10m-land-5-9",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4312,9 +4288,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-6",
+    "id": "ne10m-coast-ne10m-land-6-10",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4404,9 +4380,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-7",
+    "id": "ne10m-coast-ne10m-land-7-11",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4428,15 +4404,15 @@
       [
         26.0579,
         37.5192
-      ],
-      [
-        26,
-        37.5152
-      ],
-      [
-        26,
-        37.565
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "ne10m-coast-ne10m-land-7-12",
+    "scenarioId": "1326",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
+    "confidence": "HIGH",
+    "points": [
       [
         26.0603,
         37.6307
@@ -4452,9 +4428,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-8",
+    "id": "ne10m-coast-ne10m-land-8-13",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4560,9 +4536,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-9",
+    "id": "ne10m-coast-ne10m-land-9-14",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4572,21 +4548,13 @@
       [
         26.0122,
         40.1461
-      ],
-      [
-        26,
-        40.141
-      ],
-      [
-        26.0059,
-        40.1666
       ]
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-10",
+    "id": "ne10m-coast-ne10m-land-10-15",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4604,25 +4572,13 @@
       [
         26.075,
         39.7849
-      ],
-      [
-        26,
-        39.8131
-      ],
-      [
-        26,
-        39.8445
-      ],
-      [
-        26.0555,
-        39.8427
       ]
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-11",
+    "id": "ne10m-coast-ne10m-land-11-16",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4656,9 +4612,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-12",
+    "id": "ne10m-coast-ne10m-land-12-17",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4692,9 +4648,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-13",
+    "id": "ne10m-coast-ne10m-land-13-18",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4744,9 +4700,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-14",
+    "id": "ne10m-coast-ne10m-land-14-19",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4780,9 +4736,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-15",
+    "id": "ne10m-coast-ne10m-land-15-20",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4868,9 +4824,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-16",
+    "id": "ne10m-coast-ne10m-land-16-21",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -4944,9 +4900,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-17",
+    "id": "ne10m-coast-ne10m-land-17-22",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5016,15 +4972,15 @@
       [
         27.9484,
         36.039
-      ],
-      [
-        27.9134,
-        36
-      ],
-      [
-        27.7388,
-        36
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "ne10m-coast-ne10m-land-17-23",
+    "scenarioId": "1326",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
+    "confidence": "HIGH",
+    "points": [
       [
         27.7571,
         36.0844
@@ -5076,9 +5032,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-18",
+    "id": "ne10m-coast-ne10m-land-18-24",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5132,15 +5088,15 @@
       [
         26.0197,
         38.1592
-      ],
-      [
-        26,
-        38.1601
-      ],
-      [
-        26,
-        38.6037
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "ne10m-coast-ne10m-land-18-25",
+    "scenarioId": "1326",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
+    "confidence": "HIGH",
+    "points": [
       [
         26.064,
         38.59
@@ -5164,9 +5120,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-19",
+    "id": "ne10m-coast-ne10m-land-19-26",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5188,9 +5144,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-20",
+    "id": "ne10m-coast-ne10m-land-20-27",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5220,9 +5176,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-21",
+    "id": "ne10m-coast-ne10m-land-21-28",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5248,9 +5204,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-22",
+    "id": "ne10m-coast-ne10m-land-22-29",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5280,9 +5236,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-23",
+    "id": "ne10m-coast-ne10m-land-23-30",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5304,9 +5260,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-24",
+    "id": "ne10m-coast-ne10m-land-24-31",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5332,9 +5288,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-25",
+    "id": "ne10m-coast-ne10m-land-25-32",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5360,9 +5316,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-26",
+    "id": "ne10m-coast-ne10m-land-26-33",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5392,9 +5348,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-27",
+    "id": "ne10m-coast-ne10m-land-27-34",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5440,9 +5396,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-28",
+    "id": "ne10m-coast-ne10m-land-28-35",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5464,9 +5420,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-29",
+    "id": "ne10m-coast-ne10m-land-29-36",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5496,9 +5452,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-30",
+    "id": "ne10m-coast-ne10m-land-30-37",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5524,9 +5480,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-31",
+    "id": "ne10m-coast-ne10m-land-31-38",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5548,9 +5504,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-32",
+    "id": "ne10m-coast-ne10m-land-32-39",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5600,9 +5556,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-33",
+    "id": "ne10m-coast-ne10m-land-33-40",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5632,9 +5588,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-34",
+    "id": "ne10m-coast-ne10m-land-34-41",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5664,9 +5620,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-35",
+    "id": "ne10m-coast-ne10m-land-35-42",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5704,9 +5660,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-36",
+    "id": "ne10m-coast-ne10m-land-36-43",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [
@@ -5732,9 +5688,9 @@
     ]
   },
   {
-    "id": "ne10m-coast-ne10m-land-37",
+    "id": "ne10m-coast-ne10m-land-37-44",
     "scenarioId": "1326",
-    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19",
+    "source": "natural-earth 10m land outer ring @ca96624a56bd078437bca8184e78163e5039ad19 (border runs removed)",
     "confidence": "HIGH",
     "points": [
       [

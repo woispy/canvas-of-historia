@@ -91,15 +91,21 @@ describe('1326 seed contracts', () => {
   it('coastline is real data inside scenario bounds', () => {
     const { west, south, east, north } = scenario.mapScope.bounds;
     assert.ok(coastline.length >= 1, 'at least one segment');
-    assert.ok(
+    let maxStep = 0;    assert.ok(
       coastline.every((seg) => seg.source.includes('natural-earth')),
       'no hand-traced segments allowed anymore',
     );
     for (const seg of coastline) {
-      for (const [lon, lat] of seg.points) {
+      for (let i = 0; i < seg.points.length; i++) {
+        const [lon, lat] = seg.points[i];
         assert.ok(lon >= west && lon <= east && lat >= south && lat <= north, `out of bounds: ${lon},${lat}`);
+        if (i > 0) {
+          const step = Math.hypot(lon - seg.points[i - 1][0], lat - seg.points[i - 1][1]);
+          if (step > maxStep) maxStep = step;
+        }
       }
     }
+    assert.ok(maxStep < 1.0, `no border-artifact jumps allowed, max step ${maxStep}`);
   });
   it('cross-references resolve', () => {
     const stateIds = new Set(scenario.states.map((s) => s.id));

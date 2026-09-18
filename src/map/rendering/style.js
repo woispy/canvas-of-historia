@@ -10,15 +10,15 @@ export const STYLE_25D_V1 = Object.freeze({
     // Depth bands in WORLD degrees (not px): constant geographic width, so the
     // shallows grow with zoom like real water and always dwarf source mismatch.
     bands: Object.freeze([
-      { widthDeg: 0.008, color: 'rgba(235, 246, 252, 0.55)' },
-      { widthDeg: 0.018, color: 'rgba(235, 246, 252, 0.30)' },
-      { widthDeg: 0.035, color: 'rgba(235, 246, 252, 0.12)' },
+      { widthDeg: 0.004, color: 'rgba(235, 246, 252, 0.45)' },
+      { widthDeg: 0.01, color: 'rgba(235, 246, 252, 0.22)' },
+      { widthDeg: 0.022, color: 'rgba(235, 246, 252, 0.10)' },
     ]),
   }),
-  // Land-toned shore ribbon (world degrees) hugging the OSM line: hides the
-  // 10m-fill/OSM-stroke mismatch on both sides, reads as beach/surf.
-  shore: Object.freeze({
-    color: '#b3ac93',
+  // Sea-tone carve (world degrees): erases terrain/land spill and un-bridges
+  // narrow straits around the OSM truth line. Reads as water, not beach.
+  carve: Object.freeze({
+    color: '#cfe2ee',
     widthDeg: 0.006,
   }),
   land: Object.freeze({

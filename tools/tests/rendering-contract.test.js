@@ -48,29 +48,35 @@ describe('rendering contract (S2)', () => {
     assert.ok(nearPts > farPts * 5, `HD denser up close: ${nearPts} vs ${farPts}`);
   });
 
-  it('shallow bands paint before land, shore ribbon and crisp stroke after rivers', async () => {
+  it('carve sits after fills, crisp stroke on top, fade last', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
-    const kinds = buildDisplayList(snap, createCamera({ scale: 100 }), W, H).map((c) => c.type);
+    const cmds = buildDisplayList(snap, createCamera({ scale: 100 }), W, H);
+    const kinds = cmds.map((c) => c.type);
     const bands = kinds.indexOf('coast-bands');
     const land = kinds.indexOf('land-fill');
-    const shore = kinds.indexOf('coast-shore');
+    const fill = kinds.indexOf('province-fill');
+    const carve = kinds.indexOf('coast-carve');
     const crisp = kinds.indexOf('coastline');
-    const river = kinds.indexOf('river');
-    assert.ok(bands !== -1 && land !== -1 && shore !== -1 && crisp !== -1, 'all coastal stages present');
+    const fade = kinds.indexOf('edge-fade');
+    assert.ok([bands, land, fill, carve, crisp, fade].every((i) => i !== -1), 'all stages present');
     assert.ok(bands < land, 'bands under land (sea-side-only illusion)');
-    assert.ok(river < shore && shore < crisp, 'shore ribbon then crisp stroke on top');
+    assert.ok(fill < carve && carve < crisp, 'carve trims fills, crisp stroke on top');
+    assert.ok(!kinds.includes('coast-shore'), 'tan ribbon removed');
+    assert.equal(fade, kinds.length - 1, 'fade is the final command');
   });
 
-  it('band widths grow with zoom (world degrees, not px)', async () => {
+  it('band widths and fade feather grow with zoom (world degrees, not px)', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
-    const widthsAt = (scale) =>
-      buildDisplayList(snap, createCamera({ scale }), W, H).find((c) => c.type === 'coast-bands').widths;
+    const listAt = (scale) => buildDisplayList(snap, createCamera({ scale }), W, H);
+    const widthsAt = (scale) => listAt(scale).find((c) => c.type === 'coast-bands').widths;
+    const fadeAt = (scale) => listAt(scale).find((c) => c.type === 'edge-fade').featherPx;
     const far = widthsAt(100);
     const near = widthsAt(800);
     assert.equal(far.length, 3);
     assert.ok(near.every((w, i) => w > far[i]), `widths scale with zoom: ${far} vs ${near}`);
+    assert.ok(fadeAt(800) > fadeAt(100), 'feather scales with zoom');
   });
 
   it('smoothing preserves endpoints and softens corners', () => {

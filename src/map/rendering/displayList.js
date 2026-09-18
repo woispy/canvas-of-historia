@@ -19,7 +19,7 @@ export function buildDisplayList(snapshot, camera, width, height) {
   const refLat = (((camera.refLat ?? camera.center[1])) * Math.PI) / 180;
   const pxPerDeg = camera.scale * Math.cos(refLat);
   const bandWidths = STYLE.sea.bands.map((b) => Math.max(1, b.widthDeg * pxPerDeg));
-  const shoreWidth = Math.max(1.5, STYLE.shore.widthDeg * pxPerDeg);
+  const carveWidth = Math.max(2, STYLE.carve.widthDeg * pxPerDeg);
   // Two Chaikin passes: HD data stays sharp enough to read, corners stop
   // looking drafted. Smoothing is render-time only; data is untouched.
   const smoothCoast = (seg) =>
@@ -74,11 +74,6 @@ export function buildDisplayList(snapshot, camera, width, height) {
       points: r.points.map((pt) => project(camera, width, height, pt)),
     });
   }
-  for (const seg of coastSource) {
-    const pts = smoothCoast(seg);
-    commands.push({ type: 'coast-shore', id: seg.id, detail: coastDetail, width: shoreWidth, points: pts });
-    commands.push({ type: 'coastline', id: seg.id, detail: coastDetail, points: pts });
-  }
   for (const p of snapshot.provinces) {
     commands.push({
       type: 'province-fill',
@@ -86,6 +81,12 @@ export function buildDisplayList(snapshot, camera, width, height) {
       color: p.color,
       ring: projectRing(camera, width, height, p.ring),
     });
+  }
+  // Carve AFTER fills (trims boxes to shore) but BEFORE borders/markers.
+  for (const seg of coastSource) {
+    const pts = smoothCoast(seg);
+    commands.push({ type: 'coast-carve', id: seg.id, detail: coastDetail, width: carveWidth, points: pts });
+    commands.push({ type: 'coastline', id: seg.id, detail: coastDetail, points: pts });
   }
   for (const p of snapshot.provinces) {
     commands.push({ type: 'province-border', id: p.id, ring: projectRing(camera, width, height, p.ring) });
@@ -99,5 +100,8 @@ export function buildDisplayList(snapshot, camera, width, height) {
       at: project(camera, width, height, [m.lon, m.lat]),
     });
   }
+  // Edge fade: scope vignette so truncated border geometry dissolves instead
+  // of ending in hard cuts. Feather is geographic (0.6°) like the shallows.
+  commands.push({ type: 'edge-fade', featherPx: Math.max(24, Math.min(160, 0.6 * pxPerDeg)) });
   return commands;
 }

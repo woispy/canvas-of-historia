@@ -75,6 +75,33 @@ const geojson = JSON.parse(
 );
 
 const q = (n) => Math.round(n * 10 ** QUANTIZE_DECIMALS) / 10 ** QUANTIZE_DECIMALS;
+
+// A clipped ring point sitting exactly on the map border.
+function onBorder([lon, lat], west, south, east, north) {
+  return lon === west || lon === east || lat === south || lat === north;
+}
+
+// Drop runs that hug the map border: they are cut edges, not coastline.
+// Returns open runs (no closing segment).
+function borderlessRuns(closedRing, west, south, east, north) {
+  const open = closedRing[0][0] === closedRing[closedRing.length - 1][0] &&
+      closedRing[0][1] === closedRing[closedRing.length - 1][1]
+    ? closedRing.slice(0, -1)
+    : closedRing;
+  const runs = [];
+  let current = [];
+  for (const pt of open) {
+    if (onBorder(pt, west, south, east, north)) {
+      if (current.length >= 2) runs.push(current);
+      current = [];
+    } else {
+      current.push(pt);
+    }
+  }
+  if (current.length >= 2) runs.push(current);
+  return runs;
+}
+
 const clean = (ring) => {
   const clipped = clipRing(ring, west, south, east, north);
   if (clipped.length < MIN_RING_POINTS + 1) return [];
@@ -103,13 +130,15 @@ for (const feature of geojson.features ?? []) {
       confidence: 'HIGH',
       rings: cleanRings,
     });
-    coastline.push({
-      id: `ne10m-coast-${id}`,
-      scenarioId: scenario.id,
-      source: `natural-earth 10m land outer ring @${NE_REVISION}`,
-      confidence: 'HIGH',
-      points: cleanRings[0].slice(0, -1),
-    });
+    for (const run of borderlessRuns(cleanRings[0], west, south, east, north)) {
+      coastline.push({
+        id: `ne10m-coast-${id}-${coastline.length}`,
+        scenarioId: scenario.id,
+        source: `natural-earth 10m land outer ring @${NE_REVISION} (border runs removed)`,
+        confidence: 'HIGH',
+        points: run,
+      });
+    }
   }
 }
 

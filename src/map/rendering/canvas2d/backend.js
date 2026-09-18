@@ -115,11 +115,13 @@ export function renderCanvas2D(ctx, width, height, commands) {
         });
         break;
       }
-      case 'coast-shore': {
-        // Land-toned ribbon over the mismatch zone, under the crisp stroke.
-        ctx.strokeStyle = S.shore.color;
+      case 'coast-carve': {
+        // Sea-tone eraser around OSM truth: removes terrain/land spill and
+        // un-bridges narrow straits. Reads as water.
+        ctx.strokeStyle = S.carve.color;
         ctx.lineWidth = cmd.width ?? 2;
         ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
         tracePolyline(ctx, cmd.points);
         ctx.stroke();
         break;
@@ -214,6 +216,38 @@ export function renderCanvas2D(ctx, width, height, commands) {
         ctx.fillStyle = '#2b3438';
         ctx.font = '11px system-ui, sans-serif';
         ctx.fillText(cmd.name, cmd.at[0] + 7, cmd.at[1] + 4);
+        break;
+      }
+      case 'edge-fade': {
+        // Scope vignette: dissolve truncated border geometry into the page.
+        // Device-px mask (ctx is DPR-scaled), destination-in keeps the sea.
+        const f = (cmd.featherPx ?? 0) * (ctx.canvas.width / width);
+        if (f > 0) {
+          const mask = document.createElement('canvas');
+          mask.width = ctx.canvas.width;
+          mask.height = ctx.canvas.height;
+          const m = mask.getContext('2d');
+          m.fillStyle = '#fff';
+          m.fillRect(0, 0, mask.width, mask.height);
+          const edges = [
+            [0, 0, f, 0, 0, 0, f, mask.height],
+            [mask.width, 0, mask.width - f, 0, mask.width - f, 0, mask.width, mask.height],
+            [0, 0, 0, f, 0, 0, mask.width, f],
+            [0, mask.height, 0, mask.height - f, 0, mask.height - f, mask.width, mask.height],
+          ];
+          for (const [x0, y0, x1, y1, rx, ry, rw, rh] of edges) {
+            const grad = m.createLinearGradient(x0, y0, x1, y1);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, 'rgba(0,0,0,1)');
+            m.fillStyle = grad;
+            m.fillRect(rx, ry, rw, rh);
+          }
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.globalCompositeOperation = 'destination-in';
+          ctx.drawImage(mask, 0, 0);
+          ctx.restore();
+        }
         break;
       }
       default:
