@@ -23,6 +23,8 @@ Camera (2026-09-19): bounds-fit boot centering, wheel zoom, drag pan, HUD +/−,
 fixed-parallel projection (zero-drift). Tests 48/48.
 HD coastline (2026-09-19, green 50/50): OSM 24.6k pts + zoom LOD (HD≥250px/°),
 ODbL credit in-app. Bundle 1.7MB — binary packing with Phase 5.
+Coastal paint (2026-09-19, green 52/52): sea-side-only shallows, Chaikin
+corner softening, crisp top stroke. True single-source coast fix: Phase 5.
 
 ## Done
 

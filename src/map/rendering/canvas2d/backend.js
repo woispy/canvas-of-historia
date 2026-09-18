@@ -101,7 +101,9 @@ export function renderCanvas2D(ctx, width, height, commands) {
         ctx.fillRect(0, 0, width, height);
         break;
       }
-      case 'coastline': {
+      case 'coast-bands': {
+        // Painted before land: the fill covers the land-side half, so the
+        // shallow effect survives only seaward.
         for (const band of S.sea.bands) {
           ctx.strokeStyle = band.color;
           ctx.lineWidth = band.width;
@@ -109,15 +111,16 @@ export function renderCanvas2D(ctx, width, height, commands) {
           tracePolyline(ctx, cmd.points);
           ctx.stroke();
         }
-        ctx.save();
-        ctx.shadowColor = S.coastline.glow;
-        ctx.shadowBlur = 8;
+        break;
+      }
+      case 'coastline': {
+        // Crisp stroke on top of everything coastal. No glow: at HD zoom the
+        // glow read as blur, not depth.
         ctx.strokeStyle = S.coastline.color;
         ctx.lineWidth = S.coastline.width;
         ctx.lineJoin = 'round';
         tracePolyline(ctx, cmd.points);
         ctx.stroke();
-        ctx.restore();
         break;
       }
       case 'land-fill': {

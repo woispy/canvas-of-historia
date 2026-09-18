@@ -3,6 +3,7 @@
 // WebGPU later) only execute commands; they never compute layout.
 
 import { project, projectRing } from '../camera/camera.js';
+import { smoothPolyline } from './smooth.js';
 
 // LOD rule: the OSM high-detail twin takes over once points would land
 // denser than ~4px apart. Below that the NE 10m base layer is identical
@@ -11,6 +12,16 @@ export const HD_MIN_SCALE = 250;
 
 export function buildDisplayList(snapshot, camera, width, height) {
   const commands = [{ type: 'sea' }];
+  const hd = camera.scale >= HD_MIN_SCALE && (snapshot.coastlineHd ?? []).length > 0;
+  const coastSource = hd ? snapshot.coastlineHd : snapshot.coastline;
+  const coastDetail = hd ? 'hd' : 'base';
+  const smoothCoast = (seg) => smoothPolyline(seg.points.map((pt) => project(camera, width, height, pt)));
+  // Shallow bands paint FIRST (right after sea): the opaque land fill drawn
+  // later covers their land-side half, so whiteness appears only on the sea
+  // side. The crisp stroke paints LAST, on top of everything coastal.
+  for (const seg of coastSource) {
+    commands.push({ type: 'coast-bands', id: seg.id, detail: coastDetail, points: smoothCoast(seg) });
+  }
   for (const poly of snapshot.land ?? []) {
     commands.push({
       type: 'land-fill',
@@ -41,22 +52,15 @@ export function buildDisplayList(snapshot, camera, width, height) {
       ),
     });
   }
-  const hd = camera.scale >= HD_MIN_SCALE && (snapshot.coastlineHd ?? []).length > 0;
-  const coastSource = hd ? snapshot.coastlineHd : snapshot.coastline;
-  for (const seg of coastSource) {
-    commands.push({
-      type: 'coastline',
-      id: seg.id,
-      detail: hd ? 'hd' : 'base',
-      points: seg.points.map((pt) => project(camera, width, height, pt)),
-    });
-  }
   for (const r of snapshot.rivers ?? []) {
     commands.push({
       type: 'river',
       id: r.id,
       points: r.points.map((pt) => project(camera, width, height, pt)),
     });
+  }
+  for (const seg of coastSource) {
+    commands.push({ type: 'coastline', id: seg.id, detail: coastDetail, points: smoothCoast(seg) });
   }
   for (const p of snapshot.provinces) {
     commands.push({
