@@ -23,8 +23,10 @@ export function extractSnapshot(session) {
     return { id: c.id, name: c.name, tier: c.tier, lon: anchor.lon, lat: anchor.lat };
   });
   const land = (session.world.land ?? []).map((poly) => ({ id: poly.id, rings: poly.rings }));
+  const landOsm = (session.world.landOsm ?? []).map((poly) => ({ id: poly.id, rings: poly.rings }));
+  const waterways = (session.world.waterways ?? []).map((w) => ({ id: w.id, widthDeg: w.widthDeg, points: w.points }));
   const rivers = (session.world.rivers ?? []).map((r) => ({ id: r.id, points: r.points }));
   const lakes = (session.world.lakes ?? []).map((lake) => ({ id: lake.id, rings: lake.rings }));
   const terrain = session.world.terrain ?? null;
-  return Object.freeze({ provinces, coastline, coastlineHd, markers, land, rivers, lakes, terrain });
+  return Object.freeze({ provinces, coastline, coastlineHd, markers, land, landOsm, rivers, lakes, terrain, waterways });
 }

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "bosphorus",
+    "scenarioId": "1326",
+    "source": "hand-placed centerline on OSM shores, visually verified",
+    "widthDeg": 0.008,
+    "points": [
+      [29.09, 41.21],
+      [29.06, 41.16],
+      [29.02, 41.11],
+      [29.01, 41.06],
+      [29.03, 41.01],
+      [29.06, 40.97]
+    ]
+  },
+  {
+    "id": "dardanelles",
+    "scenarioId": "1326",
+    "source": "hand-placed centerline on OSM shores, visually verified",
+    "widthDeg": 0.01,
+    "points": [
+      [26.15, 40.35],
+      [26.3, 40.25],
+      [26.45, 40.15]
+    ]
+  }
+]

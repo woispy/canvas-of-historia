@@ -31,5 +31,14 @@ export function bootstrapWorld(def) {
   const terrain = def.terrain
     ? Object.freeze({ ...def.terrain, values: Object.freeze([...def.terrain.values]) })
     : null;
-  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, coastlineHd, land, rivers, lakes, terrain });
+  // Verified OSM theater overlay (strict, may be partial — NE covers all).
+  const landOsm = Object.freeze(
+    (def.landOsm ?? []).map((poly) =>
+      Object.freeze({ ...poly, rings: Object.freeze(poly.rings.map((ring) => freezePts(ring))) }),
+    ),
+  );
+  const waterways = Object.freeze(
+    (def.waterways ?? []).map((w) => Object.freeze({ ...w, points: freezePts(w.points) })),
+  );
+  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, coastlineHd, land, landOsm, rivers, lakes, terrain, waterways });
 }

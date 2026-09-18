@@ -21,6 +21,8 @@ const coastlineHd = load('data/scenarios/1326/coastline-hd.json');
 const land = load('data/scenarios/1326/land.json');
 const rivers = load('data/scenarios/1326/rivers.json');
 const lakes = load('data/scenarios/1326/lakes.json');
+const landOsm = load('data/scenarios/1326/land-osm.json');
+const waterways = load('data/scenarios/1326/waterways.json');
 const terrain = load('data/scenarios/1326/terrain-grid.json');
 
 function check(schema, data, label) {
@@ -68,6 +70,35 @@ describe('1326 seed contracts', () => {
     }
     assert.ok(covers([32.86, 39.93]), 'Ankara is land');
     assert.ok(!covers([-150, 0]), 'mid-Pacific is sea');
+  });
+  it('verified OSM overlay holds no sea, covers Buyukada', () => {
+    const landSchema = load('docs/contracts/land.schema.json');
+    const inRing = ([lon, lat], ring) => {
+      let ins = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i];
+        const [xj, yj] = ring[j];
+        if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) ins = !ins;
+      }
+      return ins;
+    };
+    const covers = ([lon, lat]) => landOsm.some((poly) => poly.rings.some((r) => inRing([lon, lat], r)));
+    assert.ok(landOsm.length >= 50, `verified overlay expected, got ${landOsm.length}`);
+    for (const poly of landOsm.slice(0, 30)) check(landSchema, poly, `osm ${poly.id}`);
+    assert.ok(covers([29.12, 40.86]), 'Buyukada covered by verified OSM land');
+    for (const [lon, lat] of [[34.0, 41.75], [29.3, 40.72], [29.02, 41.08]]) {
+      assert.ok(!covers([lon, lat]), `no sea inside OSM land: ${lon},${lat}`);
+    }
+  });
+  it('waterways are shaped and guarded', () => {
+    assert.equal(waterways.length, 2);
+    for (const w of waterways) {
+      assert.ok(w.points.length >= 2 && w.widthDeg > 0, `waterway ${w.id} shaped`);
+    }
+    assert.deepEqual(
+      waterways.map((w) => w.id).sort(),
+      ['bosphorus', 'dardanelles'],
+    );
   });
   it('terrain grid matches schema with sane dimensions and range', () => {
     const terrainSchema = load('docs/contracts/terrain.schema.json');

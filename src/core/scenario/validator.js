@@ -28,7 +28,7 @@ export function validateScenario(def) {
   };
 
   if (!def || typeof def !== 'object') throw new ScenarioError('validate', ['empty definition']);
-  const { scenario, provinces, cities, coastline, coastlineHd, land, rivers, lakes, terrain } = def;
+  const { scenario, provinces, cities, coastline, coastlineHd, land, landOsm, rivers, lakes, terrain, waterways } = def;
   need(scenario && typeof scenario === 'object', 'scenario: missing object');
   need(Array.isArray(provinces) && provinces.length > 0, 'provinces: non-empty array required');
   need(Array.isArray(cities), 'cities: array required');
@@ -145,7 +145,35 @@ export function validateScenario(def) {
     );
   }
 
-  for (const c of cities) {    need(isId(c.id), `city.id invalid: ${c.id}`);
+  // Verified OSM overlay shares the land polygon shape (may be partial).
+  for (const poly of landOsm ?? []) {
+    need(isId(poly.id), `landOsm.id invalid: ${poly.id}`);
+    need(poly.scenarioId === scenario.id, `landOsm ${poly.id}: scenario mismatch`);
+    need(
+      Array.isArray(poly.rings) &&
+        poly.rings.length >= 1 &&
+        poly.rings.every(
+          (ring) =>
+            Array.isArray(ring) &&
+            ring.length >= 4 &&
+            ring.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
+        ),
+      `landOsm ${poly.id}: rings must be closed [lon, lat] loops`,
+    );
+  }
+  for (const w of waterways ?? []) {
+    need(isId(w.id), `waterway.id invalid: ${w.id}`);
+    need(w.scenarioId === scenario.id, `waterway ${w.id}: scenario mismatch`);
+    need(typeof w.widthDeg === 'number' && w.widthDeg > 0, `waterway ${w.id}: widthDeg required`);
+    need(
+      Array.isArray(w.points) &&
+        w.points.length >= 2 &&
+        w.points.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
+      `waterway ${w.id}: points must be [lon, lat] pairs`,
+    );
+  }
+  for (const c of cities) {
+    need(isId(c.id), `city.id invalid: ${c.id}`);
     need(anchorIds.has(c.anchorId), `city ${c.id}: unknown anchor ${c.anchorId}`);
     need(provinceIds.has(c.provinceId), `city ${c.id}: unknown province ${c.provinceId}`);
     need(CITY_TIERS.includes(c.tier), `city ${c.id}: bad tier`);

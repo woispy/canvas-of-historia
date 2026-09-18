@@ -136,6 +136,16 @@ export function renderCanvas2D(ctx, width, height, commands) {
         ctx.stroke();
         break;
       }
+      case 'waterway': {
+        // Protected straits: guaranteed open water, verified visually.
+        ctx.strokeStyle = S.carve.color;
+        ctx.lineWidth = cmd.width ?? 4;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        tracePolyline(ctx, cmd.points);
+        ctx.stroke();
+        break;
+      }
       case 'land-fill': {
         ctx.save();
         ctx.shadowColor = S.land.shadow;
@@ -153,6 +163,18 @@ export function renderCanvas2D(ctx, width, height, commands) {
         }
         ctx.fill('evenodd');
         ctx.restore();
+        break;
+      }
+      case 'land-fill-osm': {
+        // Verified-theater overdraw, identical style to base: seamless.
+        ctx.fillStyle = S.land.base;
+        ctx.beginPath();
+        for (const ring of cmd.rings) {
+          ctx.moveTo(ring[0][0], ring[0][1]);
+          for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
+          ctx.closePath();
+        }
+        ctx.fill('evenodd');
         break;
       }
       case 'terrain-tint': {

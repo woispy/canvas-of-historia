@@ -10,9 +10,11 @@ import cities from '../data/scenarios/1326/cities.json';
 import coastline from '../data/scenarios/1326/coastline.json';
 import coastlineHd from '../data/scenarios/1326/coastline-hd.json';
 import land from '../data/scenarios/1326/land.json';
+import landOsm from '../data/scenarios/1326/land-osm.json';
 import rivers from '../data/scenarios/1326/rivers.json';
 import lakes from '../data/scenarios/1326/lakes.json';
 import terrain from '../data/scenarios/1326/terrain-grid.json';
+import waterways from '../data/scenarios/1326/waterways.json';
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
@@ -32,9 +34,11 @@ const seedReader = async (rel) => {
   if (rel.endsWith('coastline.json')) return coastline;
   if (rel.endsWith('coastline-hd.json')) return coastlineHd;
   if (rel.endsWith('land.json')) return land;
+  if (rel.endsWith('land-osm.json')) return landOsm;
   if (rel.endsWith('rivers.json')) return rivers;
   if (rel.endsWith('lakes.json')) return lakes;
   if (rel.endsWith('terrain-grid.json')) return terrain;
+  if (rel.endsWith('waterways.json')) return waterways;
   throw new Error(`unknown asset: ${rel}`);
 };
 

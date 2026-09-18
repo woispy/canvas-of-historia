@@ -33,6 +33,9 @@ World base (2026-09-19, green 53/53): ADR-005 — global NE land (2042 polys),
 no bbox clipping, meter-RDP, pole fix; OSM polygonizer deleted.
 Coast final (2026-09-19, green 53/53): plain black 1.2px stroke, wash clipped
 to land (no sea spill), credit moved to CREDITS.md.
+Masking final form (2026-09-19, green 56/56): ADR-006 — verified OSM overdraw
+(151 polys, zero sea), protected waterways (Bosphorus/Dardanelles), viewport
+culling, black crisp line. East mainland precision → Phase 5.
 
 ## Done
 

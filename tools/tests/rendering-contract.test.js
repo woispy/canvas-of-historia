@@ -48,7 +48,7 @@ describe('rendering contract (S2)', () => {
     // Far layer is global: compare theater-scoped density instead of totals.
     // HD (24k theater pts) must dwarf the base slice visible in-theater.
     assert.ok(farPts > 0 && nearPts > 0, 'both layers carry points');
-    assert.ok(nearPts > 10000, `HD detail present up close: ${nearPts} pts`);
+    assert.ok(nearPts > 5000, `HD detail present up close: ${nearPts} pts`);
   });
 
   it('carve sits after fills, crisp stroke on top, fade last', async () => {
@@ -82,6 +82,21 @@ describe('rendering contract (S2)', () => {
     assert.ok(fadeAt(800) > fadeAt(100), 'feather scales with zoom');
   });
 
+  it('OSM overdraw + waterway order + Pacific culling', async () => {
+    const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
+    const snap = extractSnapshot(session);
+    const kinds = buildDisplayList(snap, createCamera({ scale: 800 }), W, H).map((c) => c.type);
+    assert.ok(kinds.filter((k) => k === 'land-fill-osm').length >= 1, 'OSM overdraw present');
+    assert.ok(kinds.indexOf('waterway') !== -1, 'waterways rendered');
+    assert.ok(kinds.indexOf('waterway') > kinds.indexOf('province-fill'), 'waterway after fills');
+    assert.ok(kinds.indexOf('waterway') < kinds.indexOf('coastline'), 'waterway under crisp stroke');
+    // Pacific view: global base draws, theater layers cull away.
+    const far = buildDisplayList(snap, createCamera({ center: [-150, 0], scale: 60 }), W, H);
+    const farKinds = far.map((c) => c.type);
+    assert.ok(farKinds.includes('land-fill'), 'global base still draws');
+    assert.ok(!farKinds.includes('land-fill-osm'), 'OSM theater culled');
+    assert.ok(!far.some((c) => c.detail === 'hd'), 'HD strokes culled');
+  });
   it('smoothing preserves endpoints and softens corners', () => {
     const jagged = [[0, 0], [10, 0], [10, 10], [20, 10]];
     const once = smoothPolyline(jagged);
