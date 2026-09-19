@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createLayerRegistry } from '../../src/map/layers/registry.js';
-import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor, createDrawThrottle, strideForScale, clipPolylineToRect } from '../../src/map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor, selectLod, tileAlpha, createDrawThrottle, strideForScale, clipPolylineToRect } from '../../src/map/layers/coastline.js';
 import { createCamera } from '../../src/map/camera/camera.js';
 
 const W = 1200;
@@ -74,6 +74,22 @@ describe('layer architecture (ADR-010)', () => {
     assert.equal(levelFor(119), 1);
     assert.equal(levelFor(120), 2);
     assert.equal(levelFor(800), 2);
+  });
+  it('hysteresis holds level inside the band', () => {
+    assert.equal(selectLod(24, 0), 0);
+    assert.equal(selectLod(25, 0), 1);
+    assert.equal(selectLod(119, 1), 1);
+    assert.equal(selectLod(120, 1), 2);
+    assert.equal(selectLod(110, 2), 2);
+    assert.equal(selectLod(107, 2), 1);
+    assert.equal(selectLod(23, 1), 1);
+    assert.equal(selectLod(21, 1), 0);
+  });
+  it('tile alpha eases cubic over 200ms', () => {
+    assert.equal(tileAlpha(1000, 1000), 0);
+    assert.ok(tileAlpha(1100, 1000) > 0 && tileAlpha(1100, 1000) < 1);
+    assert.equal(tileAlpha(1200, 1000), 1);
+    assert.equal(tileAlpha(1500, 1000), 1);
   });
 
   it('visibleTileKeys covers the viewport', () => {

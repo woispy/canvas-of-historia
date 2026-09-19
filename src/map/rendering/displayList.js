@@ -69,7 +69,7 @@ const visibleRings = (rings, camera, width, height) =>
     height,
   );
 
-import { buildCoastLines, strideForScale } from '../layers/coastline.js';
+import { buildCoastLines, strideForScale, tileAlpha } from '../layers/coastline.js';
 
 export function buildDisplayList(snapshot, camera, width, height, coastTiles = [], opts = {}) {
   const commands = [{ type: 'sea' }];
@@ -78,12 +78,39 @@ export function buildDisplayList(snapshot, camera, width, height, coastTiles = [
   // Progressive refinement + cost governor: light stride while gesturing,
   // full on release; slow frames automatically buy speed with stride.
   const stride = strideForScale(camera.scale, opts.gesturing === true, opts.emaMs ?? 0);
-  // Coastlines-only step: ONE batched command (single canvas path).
+  // Parent underlay (opaque, stale level): never an empty hole. Fresh child
+  // tiles fade in individually; settled tiles merge into one batch.
+  // Array input = legacy child-only (tests); object form carries parents.
+  const child = Array.isArray(coastTiles) ? coastTiles : (coastTiles.child ?? []);
+  const parent = Array.isArray(coastTiles) ? [] : (coastTiles.parent ?? opts.parentTiles ?? []);
+  const nowMs = opts.nowMs ?? Date.now();
+  const freshMs = 250;
   const batches = [];
-  for (const line of buildCoastLines(coastTiles, camera, width, height, stride)) {
-    batches.push(line.points);
+  for (const tile of parent) {
+    for (const line of buildCoastLines([tile], camera, width, height, stride)) {
+      batches.push(line.points);
+    }
+  }
+  const freshCmds = [];
+  for (const tile of child) {
+    const lines = buildCoastLines([tile], camera, width, height, stride);
+    const fresh = tile.arrivedAt !== undefined && nowMs - tile.arrivedAt < freshMs;
+    for (const line of lines) {
+      if (fresh) freshCmds.push({ tile: tile.key, line });
+      else batches.push(line.points);
+    }
   }
   if (batches.length > 0) commands.push({ type: 'coastline-batch', batches });
+  // Group fresh lines per tile (≤12 concurrent by store cap): one stroke each.
+  const byTile = new Map();
+  for (const f of freshCmds) {
+    if (!byTile.has(f.tile)) byTile.set(f.tile, []);
+    byTile.get(f.tile).push(f.line.points);
+  }
+  for (const [key, lines] of [...byTile.entries()].slice(0, 12)) {
+    const tile = child.find((t) => t.key === key);
+    commands.push({ type: 'coastline-fresh', batches: lines, alpha: tileAlpha(nowMs, tile.arrivedAt ?? nowMs) });
+  }
   for (const m of snapshot.markers) {
     commands.push({
       type: 'marker',

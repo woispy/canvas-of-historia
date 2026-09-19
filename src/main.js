@@ -9,7 +9,7 @@
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
-import { createTileStore, visibleTileKeys, useOutline, levelFor, LEVEL_DEG, createDrawThrottle } from './map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, useOutline, levelFor, LEVEL_DEG, createDrawThrottle, selectLod } from './map/layers/coastline.js';
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
@@ -132,11 +132,15 @@ async function bootInner(el, opts = {}) {
     2: createTileStore(fetchTile, onTile, null, (key) => `/tiles/coast/${key}.json`),
   };
   let outline = null;
+  // Shown level freezes during gestures (hysteresis); settle recomputes.
+  let shownLevel = levelFor(camera.scale);
+  let gesturing = false;
   const draw = (s) => {
     const t0 = performance.now();
-    // Pyramid level by zoom: 0 = world outline, 1 = 8° tiles, 2 = 4° tiles.
-    // Each level is density-appropriate: no 1M-point frames, no coarse pop.
-    const level = levelFor(camera.scale);
+    // Pyramid level by zoom with hysteresis; parent level underneath while
+    // children stream in (never an empty hole).
+    const level = gesturing ? shownLevel : selectLod(camera.scale, shownLevel);
+    if (!gesturing) shownLevel = level;
     let tiles;
     if (level === 0) {
       if (!outline) {
@@ -157,9 +161,17 @@ async function bootInner(el, opts = {}) {
         tiles = [];
       }
     } else {
-      tiles = stores[level].ensure(visibleTileKeys(camera, width, height, LEVEL_DEG[level]));
+      const keys = visibleTileKeys(camera, width, height, LEVEL_DEG[level]);
+      const tiles = stores[level].ensure(keys);
+      // Parent underlay: same viewport at the coarser level (stale but
+      // present — never an empty hole while children stream in).
+      let parent = [];
+      if (level > 1) {
+        parent = stores[level - 1].ensure(visibleTileKeys(camera, width, height, LEVEL_DEG[level - 1]));
+      }
+      tiles.parentTiles = parent;
     }
-    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles, { gesturing, emaMs: frameEma });
+    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles, { gesturing, emaMs: frameEma, parentTiles: tiles.parentTiles ?? [] });
     renderCanvas2D(ctx, width, height, cmds);
     const dt = performance.now() - t0;
     frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;
@@ -170,9 +182,8 @@ async function bootInner(el, opts = {}) {
   };
   // One rAF coalescer: every frame at most one draw, always the latest state.
   // Gesture progressiveness lives in draw (stride), not in approximations.
+  // (gesturing flag declared above, TDZ-safe ordering.)
   let queued = false;
-  // Gesture flag BEFORE first draw (TDZ-safe ordering).
-  let gesturing = false;
   function scheduleDraw() {
     if (queued) return;
     queued = true;

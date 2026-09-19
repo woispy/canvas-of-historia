@@ -17,6 +17,27 @@ export function levelFor(scale) {
   return 2;
 }
 
+// Hysteresis LOD select: switch up immediately at 25/120, switch down only
+// below 22/108. Kills oscillation flicker at thresholds. Pure + tested.
+// During gestures the caller freezes the level; this runs on settle.
+export function selectLod(scale, prev) {
+  if (prev === 0) return scale >= 25 ? 1 : 0;
+  if (prev === 1) {
+    if (scale >= 120) return 2;
+    if (scale < 22) return 0;
+    return 1;
+  }
+  if (scale < 108) return 1;
+  return 2;
+}
+
+// Fresh-tile fade alpha: cubic ease over 200ms. Only first-fetch tiles fade;
+// cache hits draw instantly. Pure + tested.
+export function tileAlpha(nowMs, arrivedAtMs) {
+  const t = Math.max(0, Math.min(1, (nowMs - arrivedAtMs) / 200));
+  return 1 - (1 - t) ** 3;
+}
+
 export function coastTileUrl(level, key) {
   return level === 1 ? `/tiles/coast1/${key}.json` : `/tiles/coast/${key}.json`;
 }
@@ -43,7 +64,7 @@ export function createTileStore(fetchJson, onChange, knownTiles = null, urlFor =
       if (known && !known.has(key)) continue;
       const hit = cache.get(key);
       if (hit?.lines) {
-        ready.push({ key, lines: hit.lines, bboxes: hit.bboxes });
+        ready.push({ key, lines: hit.lines, bboxes: hit.bboxes, arrivedAt: hit.arrivedAt });
       } else if (!hit && started < MAX_FETCH_PER_PASS) {
         started++;
         cache.set(key, { pending: true });
@@ -52,11 +73,12 @@ export function createTileStore(fetchJson, onChange, knownTiles = null, urlFor =
           .then((data) => {
             // Drop results for entries evicted while in flight (cap holds).
             if (!cache.has(key)) return;
-            cache.set(key, data && Array.isArray(data.lines) ? { lines: data.lines, bboxes: data.lines.map(lineBbox) } : { lines: [], bboxes: [] });
+            const lines = data && Array.isArray(data.lines) ? data.lines : [];
+            cache.set(key, { lines, bboxes: lines.map(lineBbox), arrivedAt: Date.now() });
             onChange?.();
           })
           .catch(() => {
-            if (cache.has(key)) cache.set(key, { lines: [], bboxes: [] });
+            if (cache.has(key)) cache.set(key, { lines: [], bboxes: [], arrivedAt: 0 });
           });
       }
     }

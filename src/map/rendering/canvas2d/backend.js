@@ -223,6 +223,26 @@ export function renderCanvas2D(ctx, width, height, commands) {
         ctx.stroke();
         break;
       }
+      case 'coastline-fresh': {
+        // First-fetch tiles dissolve in (per-tile alpha, same geometry —
+        // no ghosting, unlike whole-layer blends).
+        ctx.save();
+        ctx.globalAlpha = cmd.alpha ?? 1;
+        ctx.strokeStyle = S.coastline.color;
+        ctx.lineWidth = S.coastline.width;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        for (const pts of cmd.batches ?? []) {
+          const runs = clipPolylineToRect(pts, width, height);
+          for (const run of runs) {
+            ctx.moveTo(run[0][0], run[0][1]);
+            for (let i = 1; i < run.length; i++) ctx.lineTo(run[i][0], run[i][1]);
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+        break;
+      }
       case 'marker': {
         ctx.save();
         ctx.shadowColor = 'rgba(0,0,0,0.6)';

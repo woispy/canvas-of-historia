@@ -71,6 +71,20 @@ describe('rendering contract (S2)', () => {
     assert.ok(!farKinds.includes('coastline-batch'), 'no strokes without loaded tiles');
     assert.ok(farKinds.includes('edge-fade'), 'fade still applies');
   });
+  it('parent underlay merges, fresh tiles fade individually', async () => {
+    const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
+    const snap = extractSnapshot(session);
+    const parent = [{ key: 'p', lines: [[[29, 40], [30, 41]]] }];
+    const child = [{ key: 'c', lines: [[[29, 40], [30, 41]]], arrivedAt: 900 }];
+    const cmds = buildDisplayList(snap, createCamera({ scale: 800 }), W, H, { child, parent }, { nowMs: 1000 });
+    const kinds = cmds.map((c) => c.type);
+    assert.ok(kinds.includes('coastline-batch'), 'settled + parent merged');
+    const fresh = cmds.find((c) => c.type === 'coastline-fresh');
+    assert.ok(fresh, 'fresh tile gets its own command');
+    assert.ok(fresh.alpha > 0 && fresh.alpha < 1, `mid-fade alpha, got ${fresh.alpha}`);
+    const settled = buildDisplayList(snap, createCamera({ scale: 800 }), W, H, { child: [{ key: 'c', lines: [[[29, 40], [30, 41]]], arrivedAt: 100 }], parent: [] }, { nowMs: 1000 });
+    assert.ok(!settled.some((c) => c.type === 'coastline-fresh'), 'old tiles merge silently');
+  });
   it('smoothing preserves endpoints and softens corners', () => {
     const jagged = [[0, 0], [10, 0], [10, 10], [20, 10]];
     const once = smoothPolyline(jagged);
