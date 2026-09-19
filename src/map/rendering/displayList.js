@@ -75,8 +75,9 @@ export function buildDisplayList(snapshot, camera, width, height, coastTiles = [
   const commands = [{ type: 'sea' }];
   const refLat = ((camera.refLat ?? camera.center[1]) * Math.PI) / 180;
   const pxPerDeg = camera.scale * Math.cos(refLat);
-  // Progressive refinement: light stride while gesturing, full on release.
-  const stride = strideForScale(camera.scale, opts.gesturing === true);
+  // Progressive refinement + cost governor: light stride while gesturing,
+  // full on release; slow frames automatically buy speed with stride.
+  const stride = strideForScale(camera.scale, opts.gesturing === true, opts.emaMs ?? 0);
   // Coastlines-only step: ONE batched command (single canvas path).
   const batches = [];
   for (const line of buildCoastLines(coastTiles, camera, width, height, stride)) {

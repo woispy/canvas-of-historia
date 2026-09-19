@@ -90,6 +90,13 @@ describe('layer architecture (ADR-010)', () => {
     assert.equal(strideForScale(10, false), 4);
     assert.equal(strideForScale(10, true), 16);
   });
+  it('cost governor buys speed on slow frames, capped', () => {
+    assert.equal(strideForScale(800, false, 50), 2);
+    assert.equal(strideForScale(800, false, 100), 4);
+    assert.equal(strideForScale(800, true, 100), 16);
+    assert.equal(strideForScale(10, true, 200), 32);
+    assert.equal(strideForScale(10, true, 0), 16);
+  });
   it('draw throttle fires at most once per window, trailing wins', () => {
     let now = 0;
     let fires = 0;

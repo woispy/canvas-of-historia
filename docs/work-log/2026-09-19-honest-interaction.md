@@ -14,3 +14,12 @@ Map must track the pointer stably — no blits, no approximations, no flashes.
 - Page/canvas sea-tone backdrop (no white flashes, ever).
 - Tests: gesture stride table; throttle test kept for the helper.
   70/70 green.
+
+## Transition polish (same day — pop still visible)
+
+- Cost governor in `strideForScale(scale, gesturing, emaMs)`: >40ms doubles
+  stride, >80ms doubles again (cap 32). Slow machines degrade gracefully.
+- Sharpen crossfade: release triggers 3 alpha passes (0.35/0.7/1.0) over the
+  gesture frame — detail dissolves in instead of snapping. New gesture
+  cancels the fade. Release delay 150ms → 90ms.
+- 71/71 green.

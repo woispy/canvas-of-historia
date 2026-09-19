@@ -128,12 +128,15 @@ export function createDrawThrottle(minMs, nowFn, scheduleFn) {
 }
 // Pure: tile lines + camera → projected screen polylines.
 // Tiles may carry precomputed bboxes (from the store); otherwise computed.
-// Adaptive stride by zoom AND gesture state. During active gestures the
-// stride quadruples (progressive refinement): the map tracks the pointer 1:1
-// with zero approximations, then sharpens on release.
-export function strideForScale(scale, gesturing = false) {
-  const base = scale < 30 ? 4 : scale < 100 ? 2 : 1;
-  return gesturing ? base * 4 : base;
+// Adaptive stride by zoom, gesture, AND measured cost. The governor closes
+// the loop: slow frames automatically buy speed with stride, fast frames buy
+// detail back. Pure and unit-tested.
+export function strideForScale(scale, gesturing = false, emaMs = 0) {
+  let s = scale < 30 ? 4 : scale < 100 ? 2 : 1;
+  if (gesturing) s *= 4;
+  if (emaMs > 40) s *= 2;
+  if (emaMs > 80) s *= 2;
+  return Math.min(s, 32);
 }
 
 // Pure: tile lines + camera → projected screen polylines.
