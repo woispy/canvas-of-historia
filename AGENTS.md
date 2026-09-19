@@ -15,7 +15,10 @@
 - `@coder`: implements exactly one task per run. Never pushes to any remote.
 - `@analyst`: diagnoses failures, proposes the next 1-3 tasks. May write only to `docs/work-log/`.
 - `@reviewer`: PASS/RED contract and layering review. May write only to `docs/work-log/`.
-- `@local-assist`: lightweight hosted helper for summaries, status reports, and simple codebase questions. Escalates hard tasks instead of guessing. No local inference provider is used.
+- `@local-assist`: lightweight hosted helper for summaries, status reports, and simple codebase questions. Escalates hard tasks instead of guessing.
+- `@nim-coder`: NVIDIA NIM coding workhorse.
+- `@nim-reasoning`: NVIDIA NIM high-reasoning specialist.
+- NVIDIA NIM is a first-class inference lane; Ollama/local LLM is not used.
 
 ## Continuity discipline (mandatory for every run)
 
@@ -26,5 +29,5 @@
 
 ## Local-first
 
-- All development and tests run locally (Node 24, npm). AI inference uses OpenCode Zen hosted models; no Ollama/local LLM is required. GitHub is mirror + backup; CI is added later when the project matures. See `docs/adr/ADR-001-local-first-workflow.md`.
+- All development and tests run locally (Node 24, npm). AI inference uses OpenCode Zen hosted models plus NVIDIA NIM. NIM may be hosted by NVIDIA or self-hosted through an OpenAI-compatible /v1 endpoint; no Ollama/local LLM is required. GitHub is mirror + backup; CI is added later when the project matures. See `docs/adr/ADR-001-local-first-workflow.md`.
 - Never push without explicit user approval. Never commit secrets (`*.env`, API keys, tokens).
