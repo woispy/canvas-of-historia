@@ -56,12 +56,25 @@ async function loadSeed() {
 export async function boot(rootElement, opts = {}) {
   const el = rootElement ?? (typeof document !== 'undefined' ? document.getElementById('app') : null);
   if (!el) throw new Error('coh: #app root element missing');
+  try {
+    return await bootInner(el, opts);
+  } catch (err) {
+    // Visible diagnostics: never fail silent in the browser.
+    const hud = typeof document !== 'undefined' ? document.getElementById('hud') : null;
+    if (hud) hud.innerHTML = `<strong>boot error</strong><span>${String(err?.message ?? err)}</span>`;
+    throw err;
+  }
+}
+
+async function bootInner(el, opts = {}) {
   const readJson = await loadSeed();
+  if (typeof document === 'undefined') {
+    return enterGame(readJson, { scenarioId: '1326', countryId: opts.countryId ?? 'ottomans' });
+  }
   const session = await enterGame(readJson, {
     scenarioId: '1326',
     countryId: opts.countryId ?? 'ottomans',
   });
-  if (typeof document === 'undefined') return session;
   const canvas = document.createElement('canvas');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const width = el.clientWidth || window.innerWidth;
