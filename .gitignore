@@ -8,3 +8,5 @@ data/sources/
 dev-server.log
 # Generated tile store (rebuilt via npm run gis:coast-tiles)
 public/tiles/
+# Generated far-zoom outline (rebuild via node tools/gis/build-world-outline.js)
+public/data/

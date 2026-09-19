@@ -15,16 +15,21 @@
   offscreen pan-blit, TileStore wiring, click selection kept.
 - Entry 11.9MB → 25KB.
 
-## Round 2 (same day, lag persisted)
+## Round 3 (same day — far-zoom lag + crash reports with numbers)
 
-Measured remaining costs: per-frame full-point bbox scans, zoom re-stroke
-per wheel tick, tile-arrival redraws mid-drag, mask rebuild per frame.
-- Bboxes precomputed once at tile load; cull reads them (no point scans).
-- Wheel: instant zoom-blit about cursor + 120ms-debounced crisp render.
-- Tile arrivals deferred during active drag (repaint on release).
-- Edge-fade mask cached by size+feather (cap 4).
-- `?perf=1` overlay: EMA frame ms + projected kpts + cached tiles.
+Perf overlay read `1518tiles` + 404 storm + 1254kpts/350ms at world zoom.
+Root causes found by measurement (not guessing):
+
+1. **404 storm:** viewport range requests ALL tiles incl. open ocean; each
+   404s. Fix: manifest gate (only fetch tiles present in manifest.json).
+2. **Unbounded cache (the crash):** resolved fetches re-added evicted keys —
+   cache grew past cap with full tile data (memory balloon). Fix: drop
+   results for evicted keys. Eviction regression test added (200 keys → ≤96).
+3. **1.2M projections at far zoom:** new `world-outline.json` (NE coast RDP
+   0.05°, 50k pts, 846KB, fetched once) replaces all tiles below scale 60.
+4. **Fetch stampede:** max 12 new fetches per pass; deferred during drag.
+5. **Raster cost:** sub-pixel segments skipped in the batch painter.
 
 ## Test results
 
-- `npm test` → 65/65 pass. `npm run build` → clean, entry 26KB.
+- `npm test` → 67/67 pass. `npm run build` → clean, entry 26KB.

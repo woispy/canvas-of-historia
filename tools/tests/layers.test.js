@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createLayerRegistry } from '../../src/map/layers/registry.js';
-import { createTileStore, visibleTileKeys, buildCoastLines } from '../../src/map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, FAR_SCALE } from '../../src/map/layers/coastline.js';
 import { createCamera } from '../../src/map/camera/camera.js';
 
 const W = 1200;
@@ -37,6 +37,35 @@ describe('layer architecture (ADR-010)', () => {
     const second = store.ensure(['1_1']);
     assert.equal(second.length, 1, 'cache hit on second pass');
     assert.equal(calls, 1, 'no refetch');
+  });
+
+  it('manifest gates ocean tiles, eviction caps the cache', async () => {
+    let calls = 0;
+    const store = createTileStore(
+      async () => {
+        calls++;
+        return { lines: [[[0, 0], [1, 1]]] };
+      },
+      () => {},
+      new Set(['kept']),
+    );
+    store.ensure(['ocean']);
+    await new Promise((r) => setTimeout(r, 10));
+    assert.equal(calls, 0, 'known-ocean never fetched (no 404 storm)');
+    const open = createTileStore(
+      async () => ({ lines: [[[0, 0], [1, 1]]] }),
+      () => {},
+    );
+    for (let i = 0; i < 200; i++) open.ensure([`k${i}`]);
+    await new Promise((r) => setTimeout(r, 50));
+    assert.ok(open.size() <= 96, `LRU capped, got ${open.size()}`);
+  });
+
+  it('far zoom uses the outline, near zoom uses tiles', () => {
+    assert.equal(useOutline(10), true);
+    assert.equal(useOutline(FAR_SCALE - 1), true);
+    assert.equal(useOutline(FAR_SCALE), false);
+    assert.equal(useOutline(800), false);
   });
 
   it('visibleTileKeys covers the viewport', () => {

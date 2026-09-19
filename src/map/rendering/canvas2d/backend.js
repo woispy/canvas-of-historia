@@ -118,15 +118,24 @@ export function renderCanvas2D(ctx, width, height, commands) {
         break;
       }
       case 'coastline-batch': {
-        // One path for ALL coastline strokes: thousands of beginPath calls
-        // collapse into one (the main pan/zoom cost before the blit cache).
+        // One path for ALL coastline strokes. Sub-pixel segments skipped:
+        // invisible by construction, saves rasterization on dense coasts.
         ctx.strokeStyle = S.coastline.color;
         ctx.lineWidth = S.coastline.width;
         ctx.lineJoin = 'round';
         ctx.beginPath();
         for (const pts of cmd.batches ?? []) {
-          ctx.moveTo(pts[0][0], pts[0][1]);
-          for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+          let px = pts[0][0];
+          let py = pts[0][1];
+          ctx.moveTo(px, py);
+          for (let i = 1; i < pts.length; i++) {
+            const dx = pts[i][0] - px;
+            const dy = pts[i][1] - py;
+            if (dx * dx + dy * dy < 0.25 && i < pts.length - 1) continue;
+            px = pts[i][0];
+            py = pts[i][1];
+            ctx.lineTo(px, py);
+          }
         }
         ctx.stroke();
         break;

@@ -8,31 +8,53 @@ import { unproject } from '../selection/pick.js';
 
 export const COAST_TILE_URL = (key) => `/tiles/coast/${key}.json`;
 export const TILE_CACHE_MAX = 96;
+export const MAX_FETCH_PER_PASS = 12;
+// Below this scale the far outline replaces tiles (no fetch storm at sea).
+export const FAR_SCALE = 60;
 
-export function createTileStore(fetchJson, onChange) {
+export function useOutline(scale) {
+  return scale < FAR_SCALE;
+}
+
+export function createTileStore(fetchJson, onChange, knownTiles = null) {
   const cache = new Map();
+  const api = {
+    get: (key) => cache.get(key),
+    ensure: null,
+    size: () => cache.size,
+    knownTiles,
+  };
   const get = (key) => cache.get(key);
   const ensure = (keys) => {
     const ready = [];
+    let started = 0;
+    const known = api.knownTiles;
     for (const key of keys) {
+      // Manifest gate: never fetch known-ocean tiles (the 404 storm).
+      if (known && !known.has(key)) continue;
       const hit = cache.get(key);
       if (hit?.lines) {
         ready.push({ key, lines: hit.lines, bboxes: hit.bboxes });
-      } else if (!hit) {
+      } else if (!hit && started < MAX_FETCH_PER_PASS) {
+        started++;
         cache.set(key, { pending: true });
         if (cache.size > TILE_CACHE_MAX) cache.delete(cache.keys().next().value);
         fetchJson(COAST_TILE_URL(key))
           .then((data) => {
-            const lines = data && Array.isArray(data.lines) ? data.lines : [];
-            cache.set(key, { lines, bboxes: lines.map(lineBbox) });
+            // Drop results for entries evicted while in flight (cap holds).
+            if (!cache.has(key)) return;
+            cache.set(key, data && Array.isArray(data.lines) ? { lines: data.lines, bboxes: data.lines.map(lineBbox) } : { lines: [], bboxes: [] });
             onChange?.();
           })
-          .catch(() => cache.set(key, { lines: [], bboxes: [] }));
+          .catch(() => {
+            if (cache.has(key)) cache.set(key, { lines: [], bboxes: [] });
+          });
       }
     }
     return ready;
   };
-  return { get, ensure, size: () => cache.size };
+  api.ensure = ensure;
+  return api;
 }
 
 // Per-line world bbox, computed ONCE at load (not per frame).

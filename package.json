@@ -23,6 +23,7 @@
     "gis:fetch-planet-coast": "node tools/gis/fetch-planet-coast.js",
     "gis:build-coast-tiles": "node tools/gis/build-coast-tiles.js",
     "gis:coast-tiles": "npm run gis:fetch-planet-coast && npm run gis:build-coast-tiles",
+    "gis:build-world-outline": "node tools/gis/build-world-outline.js",
     "gis:fetch-osm-coast": "node tools/gis/fetch-osm-coast.js",
     "gis:build-hd-coast": "node tools/gis/build-hd-coast.js",
     "gis:hd-coast": "npm run gis:fetch-osm-coast && npm run gis:build-hd-coast"

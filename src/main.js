@@ -9,7 +9,7 @@
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
-import { createTileStore, visibleTileKeys } from './map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, useOutline } from './map/layers/coastline.js';
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
@@ -106,6 +106,18 @@ async function bootInner(el, opts = {}) {
   const perfEl = perfOn ? (() => { const d = document.createElement('div'); d.id = 'perf'; document.body.appendChild(d); return d; })() : null;
 
   let lastFetchError = '';
+  let knownTiles = null;
+  fetch('/tiles/coast/manifest.json')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((m) => {
+      if (m?.tiles) {
+        knownTiles = new Set(Object.keys(m.tiles));
+        store.knownTiles = knownTiles;
+        scheduleFull();
+      }
+    })
+    .catch(() => {});
+  let outline = null;
   const store = createTileStore(
     async (url) => {
       try {
@@ -125,7 +137,30 @@ async function bootInner(el, opts = {}) {
   );
   const draw = (s) => {
     const t0 = performance.now();
-    const tiles = store.ensure(visibleTileKeys(camera, width, height));
+    // Far zoom: single world outline (no tile storm, ~50k pts max).
+    // Near zoom: planet tiles on demand.
+    let tiles;
+    if (useOutline(camera.scale)) {
+      if (!outline) {
+        outline = { pending: true };
+        fetch('/data/world-outline.json')
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            outline = data && Array.isArray(data.lines) ? { lines: data.lines } : { lines: [] };
+            scheduleFull();
+          })
+          .catch(() => {
+            outline = { lines: [] };
+          });
+        tiles = [];
+      } else if (outline.lines) {
+        tiles = [{ key: 'world', lines: outline.lines }];
+      } else {
+        tiles = [];
+      }
+    } else {
+      tiles = store.ensure(visibleTileKeys(camera, width, height));
+    }
     const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles);
     renderCanvas2D(offCtx, width, height, cmds);
     renderedScale = camera.scale;
