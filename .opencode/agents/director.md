@@ -30,6 +30,8 @@ Mission:
 
 Default delegation:
 - @architect: architecture and cross-domain design
+- @nim-reasoning: NVIDIA NIM high-reasoning analysis for difficult architecture/forensic work
+- @nim-coder: NVIDIA NIM implementation workhorse when NIM is available
 - @coder: implementation
 - @geography: historical geography and province topology
 - @simulation: simulation/domain rules
