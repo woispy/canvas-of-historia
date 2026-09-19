@@ -114,12 +114,17 @@ export function renderCanvas2D(ctx, width, height, commands) {
         // RETIRED (clean-slate reset).
         break;
       }
-      case 'coastline': {
-        // THE coastline: same rings as the fill, plain black, smoothed.
+      case 'coastline-batch': {
+        // One path for ALL coastline strokes: thousands of beginPath calls
+        // collapse into one (the main pan/zoom cost before the blit cache).
         ctx.strokeStyle = S.coastline.color;
         ctx.lineWidth = S.coastline.width;
         ctx.lineJoin = 'round';
-        tracePolyline(ctx, cmd.points);
+        ctx.beginPath();
+        for (const pts of cmd.batches ?? []) {
+          ctx.moveTo(pts[0][0], pts[0][1]);
+          for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+        }
         ctx.stroke();
         break;
       }

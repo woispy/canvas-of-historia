@@ -69,22 +69,26 @@ const visibleRings = (rings, camera, width, height) =>
     height,
   );
 
+import { buildCoastLines } from '../layers/coastline.js';
+
+// Adaptive stride: sub-pixel detail is skipped at far zoom (documented,
+// invisible by construction — a dropped point moves < 1px on screen).
+function strideFor(scale) {
+  if (scale < 30) return 4;
+  if (scale < 100) return 2;
+  return 1;
+}
+
 export function buildDisplayList(snapshot, camera, width, height, coastTiles = []) {
   const commands = [{ type: 'sea' }];
   const refLat = ((camera.refLat ?? camera.center[1]) * Math.PI) / 180;
   const pxPerDeg = camera.scale * Math.cos(refLat);
-  // Coastlines-only step: NO land fills, NO washes, NO borders.
-  // Tile strokes from the planet store (same black line everywhere).
-  for (const tile of coastTiles) {
-    for (const line of tile.lines ?? []) {
-      if (!visiblePoints(line, camera, width, height)) continue;
-      commands.push({
-        type: 'coastline',
-        id: tile.key,
-        points: line.map((pt) => project(camera, width, height, pt)),
-      });
-    }
+  // Coastlines-only step: ONE batched command (single canvas path).
+  const batches = [];
+  for (const line of buildCoastLines(coastTiles, camera, width, height, strideFor(camera.scale))) {
+    batches.push(line.points);
   }
+  if (batches.length > 0) commands.push({ type: 'coastline-batch', batches });
   for (const m of snapshot.markers) {
     commands.push({
       type: 'marker',

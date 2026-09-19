@@ -1,27 +1,15 @@
 // Canvas of Historia — boot entry.
-// SLICE SCAFFOLDING: seed JSON is imported directly so the browser can boot
-// without an asset pipeline. Phase 5 replaces this with packed runtime assets
-// loaded from public/ (see SYSTEM-ARCHITECTURE.md §4). Source data stays in
-// data/ and is never fetched raw in production.
+//
+// Data: small scenario files import statically; the megabyte-scale payloads
+// (land, coastlines, terrain) lazy-load via dynamic import so first paint is
+// fast (Phase 5 packs them into binary assets).
+// Render: rAF-throttled draws + offscreen pan-blit (drag pans blit, zoom
+// re-renders). Tile coastline store lives in the coastline layer module.
 
-import scenario from '../data/scenarios/1326/scenario.json';
-import provinces from '../data/scenarios/1326/provinces.json';
-import cities from '../data/scenarios/1326/cities.json';
-import coastline from '../data/scenarios/1326/coastline.json';
-import coastlineHd from '../data/scenarios/1326/coastline-hd.json';
-import land from '../data/scenarios/1326/land.json';
-import landOsm from '../data/scenarios/1326/land-osm.json';
-import landCountries from '../data/scenarios/1326/land-countries.json';
-import rivers from '../data/scenarios/1326/rivers.json';
-import lakes from '../data/scenarios/1326/lakes.json';
-import terrain from '../data/scenarios/1326/terrain-grid.json';
-import waterways from '../data/scenarios/1326/waterways.json';
-import seas from '../data/scenarios/1326/seas.json';
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
-import { tileRangeForView } from './map/tiles.js';
-import { unproject } from './map/selection/pick.js';
+import { createTileStore, visibleTileKeys } from './map/layers/coastline.js';
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
@@ -31,27 +19,45 @@ import { renderCityPanel, renderProvincePanel } from './app/panels.js';
 export const COH_VERSION = '0.1.0';
 export const COH_PHASE = 2;
 
-const seedReader = async (rel) => {
-  if (rel.endsWith('scenario.json')) return scenario;
-  if (rel.endsWith('provinces.json')) return provinces;
-  if (rel.endsWith('cities.json')) return cities;
-  if (rel.endsWith('coastline.json')) return coastline;
-  if (rel.endsWith('coastline-hd.json')) return coastlineHd;
-  if (rel.endsWith('land.json')) return land;
-  if (rel.endsWith('land-osm.json')) return landOsm;
-  if (rel.endsWith('land-countries.json')) return landCountries;
-  if (rel.endsWith('rivers.json')) return rivers;
-  if (rel.endsWith('lakes.json')) return lakes;
-  if (rel.endsWith('terrain-grid.json')) return terrain;
-  if (rel.endsWith('waterways.json')) return waterways;
-  if (rel.endsWith('seas.json')) return seas;
-  throw new Error(`unknown asset: ${rel}`);
-};
+async function loadSeed() {
+  // Literal dynamic imports: Vite code-splits each into its own chunk,
+  // loaded in parallel after boot starts (fast first paint).
+  const mods = await Promise.all([
+    import('../data/scenarios/1326/scenario.json'),
+    import('../data/scenarios/1326/provinces.json'),
+    import('../data/scenarios/1326/cities.json'),
+    import('../data/scenarios/1326/coastline.json'),
+    import('../data/scenarios/1326/coastline-hd.json'),
+    import('../data/scenarios/1326/land.json'),
+    import('../data/scenarios/1326/land-osm.json'),
+    import('../data/scenarios/1326/land-countries.json'),
+    import('../data/scenarios/1326/rivers.json'),
+    import('../data/scenarios/1326/lakes.json'),
+    import('../data/scenarios/1326/terrain-grid.json'),
+    import('../data/scenarios/1326/waterways.json'),
+    import('../data/scenarios/1326/seas.json'),
+  ]);
+  const names = [
+    'scenario.json', 'provinces.json', 'cities.json', 'coastline.json',
+    'coastline-hd.json', 'land.json', 'land-osm.json', 'land-countries.json',
+    'rivers.json', 'lakes.json', 'terrain-grid.json', 'waterways.json', 'seas.json',
+  ];
+  const byName = {};
+  names.forEach((n, i) => {
+    byName[n] = mods[i].default;
+  });
+  return async (rel) => {
+    const name = rel.split('/').pop();
+    if (byName[name] !== undefined) return byName[name];
+    throw new Error(`unknown asset: ${rel}`);
+  };
+}
 
 export async function boot(rootElement, opts = {}) {
   const el = rootElement ?? (typeof document !== 'undefined' ? document.getElementById('app') : null);
   if (!el) throw new Error('coh: #app root element missing');
-  const session = await enterGame(seedReader, {
+  const readJson = await loadSeed();
+  const session = await enterGame(readJson, {
     scenarioId: '1326',
     countryId: opts.countryId ?? 'ottomans',
   });
@@ -71,43 +77,53 @@ export async function boot(rootElement, opts = {}) {
   // Camera fits the scenario bounds, so the full theater is centered on boot.
   let camera = fitCamera(session.scenario.mapScope.bounds, width, height);
   const snapshot = extractSnapshot(session);
-  // Planet tile store: fetch visible 4° tiles on demand, LRU-capped.
-  const tileCache = new Map();
-  const TILE_CACHE_MAX = 96;
-  const visibleTileLines = () => {
-    const corners = [
-      [0, 0],
-      [width, 0],
-      [0, height],
-      [width, height],
-    ].map(([x, y]) => unproject(camera, width, height, [x, y]));
-    const lons = corners.map(([lo]) => lo);
-    const lats = corners.map(([, la]) => la);
-    const keys = tileRangeForView(Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats));
-    const out = [];
-    for (const key of keys) {
-      const hit = tileCache.get(key);
-      if (hit?.lines) {
-        out.push({ key, lines: hit.lines });
-      } else if (!hit) {
-        tileCache.set(key, { pending: true });
-        if (tileCache.size > TILE_CACHE_MAX) {
-          const first = tileCache.keys().next().value;
-          tileCache.delete(first);
-        }
-        fetch(`/tiles/coast/${key}.json`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            tileCache.set(key, data && Array.isArray(data.lines) ? { lines: data.lines } : { lines: [] });
-            draw(current);
-          })
-          .catch(() => tileCache.set(key, { lines: [] }));
-      }
-    }
-    return out;
+
+  // Offscreen layer cache: full re-render on zoom/tile-arrival; pan blits.
+  const off = document.createElement('canvas');
+  off.width = canvas.width;
+  off.height = canvas.height;
+  const offCtx = off.getContext('2d');
+  offCtx.scale(dpr, dpr);
+  let renderedScale = -1;
+  let panDx = 0;
+  let panDy = 0;
+
+  const store = createTileStore(
+    async (url) => {
+      const r = await fetch(url);
+      return r.ok ? r.json() : null;
+    },
+    () => scheduleFull(),
+  );
+  const draw = (s) => {
+    const tiles = store.ensure(visibleTileKeys(camera, width, height));
+    renderCanvas2D(offCtx, width, height, buildDisplayList(extractSnapshot(s), camera, width, height, tiles));
+    renderedScale = camera.scale;
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(off, 0, 0, width, height);
   };
-  const draw = (s) =>
-    renderCanvas2D(ctx, width, height, buildDisplayList(extractSnapshot(s), camera, width, height, visibleTileLines()));
+  // rAF coalescing: bursts of events render once per frame. Drag pans only
+  // blit the cached frame (fast path); release re-renders crisply once.
+  let queued = null;
+  function scheduleFull() {
+    if (queued) return;
+    queued = 'full';
+    requestAnimationFrame(() => {
+      queued = null;
+      draw(current);
+    });
+  }
+  function schedulePan() {
+    if (queued) return;
+    queued = 'pan';
+    requestAnimationFrame(() => {
+      queued = null;
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(off, panDx, panDy, width, height);
+      panDx = 0;
+      panDy = 0;
+    });
+  }
   draw(session);
   let current = session;
   const panel = document.getElementById('panel');
@@ -126,12 +142,12 @@ export async function boot(rootElement, opts = {}) {
       .join('');
     hud.querySelector('#advance').addEventListener('click', () => {
       current = advanceMonth(current);
-      draw(current);
+      scheduleFull();
       renderHud();
     });
     const zoomCenter = (factor) => {
       camera = zoomAt(camera, width, height, width / 2, height / 2, factor);
-      draw(current);
+      scheduleFull();
     };
     hud.querySelector('#zin').addEventListener('click', () => zoomCenter(1.5));
     hud.querySelector('#zout').addEventListener('click', () => zoomCenter(1 / 1.5));
@@ -151,12 +167,12 @@ export async function boot(rootElement, opts = {}) {
       event.preventDefault();
       const [x, y] = toLocal(event);
       camera = zoomAt(camera, width, height, x, y, event.deltaY < 0 ? 1.25 : 1 / 1.25);
-      draw(current);
+      scheduleFull();
     },
     { passive: false },
   );
 
-  // Drag pans. A click without drag still selects (moved < 4px).
+  // Drag pans (blit fast path). A click without drag still selects (< 4px).
   let drag = null;
   let suppressClick = false;
   canvas.addEventListener('pointerdown', (event) => {
@@ -173,13 +189,20 @@ export async function boot(rootElement, opts = {}) {
       camera = panBy(camera, width, height, dx, dy);
       drag.x = event.clientX;
       drag.y = event.clientY;
-      draw(current);
+      if (camera.scale === renderedScale) {
+        panDx += dx;
+        panDy += dy;
+        schedulePan();
+      } else {
+        scheduleFull();
+      }
     }
   });
   const endDrag = () => {
     suppressClick = drag?.moved === true;
     drag = null;
     canvas.style.cursor = 'grab';
+    if (suppressClick) scheduleFull();
   };
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);

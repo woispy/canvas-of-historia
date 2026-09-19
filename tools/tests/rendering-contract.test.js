@@ -43,7 +43,7 @@ describe('rendering contract (S2)', () => {
     ]);
     const kinds = cmds.map((c) => c.type);
     assert.equal(cmds[0].type, 'sea');
-    const coast = kinds.indexOf('coastline');
+    const coast = kinds.indexOf('coastline-batch');
     const marker = kinds.indexOf('marker');
     const fade = kinds.indexOf('edge-fade');
     assert.ok(coast !== -1 && marker !== -1 && fade !== -1, 'all stages present');
@@ -68,7 +68,7 @@ describe('rendering contract (S2)', () => {
     const far = buildDisplayList(snap, createCamera({ center: [-150, 0], scale: 60 }), W, H, []);
     const farKinds = far.map((c) => c.type);
     assert.equal(far[0].type, 'sea');
-    assert.ok(!farKinds.includes('coastline'), 'no strokes without loaded tiles');
+    assert.ok(!farKinds.includes('coastline-batch'), 'no strokes without loaded tiles');
     assert.ok(farKinds.includes('edge-fade'), 'fade still applies');
   });
   it('smoothing preserves endpoints and softens corners', () => {
@@ -91,7 +91,7 @@ describe('rendering contract (S2)', () => {
     ]);
     const kinds = cmds.map((c) => c.type);
     assert.equal(cmds[0].type, 'sea');
-    assert.ok(kinds.filter((k) => k === 'coastline').length >= 1, 'tile coastline present');
+    assert.ok(kinds.filter((k) => k === 'coastline-batch').length >= 1, 'tile coastline present');
     assert.equal(kinds.filter((k) => k === 'marker').length, 6);
     const finite = (pt) => Number.isFinite(pt[0]) && Number.isFinite(pt[1]);
     for (const c of cmds) {
@@ -100,6 +100,9 @@ describe('rendering contract (S2)', () => {
       if (c.at) assert.ok(finite(c.at), `${c.type} ${c.id}: finite coords`);
       if (c.rings) {
         for (const ring of c.rings) assert.ok(ring.every(finite), `${c.type} ${c.id}: finite coords`);
+      }
+      if (c.batches) {
+        for (const batch of c.batches) assert.ok(batch.every(finite), `${c.type}: finite coords`);
       }
     }
   });

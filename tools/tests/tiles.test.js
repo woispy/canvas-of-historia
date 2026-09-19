@@ -56,7 +56,7 @@ describe('planet tile store', () => {
     ]);
     const kinds = cmds.map((c) => c.type);
     assert.equal(cmds[0].type, 'sea');
-    assert.ok(kinds.filter((k) => k === 'coastline').length >= 1, 'tile strokes drawn');
+    assert.ok(kinds.filter((k) => k === 'coastline-batch').length === 1, 'tile strokes batched');
     for (const retired of ['land-fill', 'province-fill', 'province-border', 'coast-bands', 'terrain-tint']) {
       assert.ok(!kinds.includes(retired), `retired absent: ${retired}`);
     }
