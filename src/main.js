@@ -103,10 +103,17 @@ async function bootInner(el, opts = {}) {
   let frameEma = 0;
   let lastPts = 0;
 
+  let lastFetchError = '';
   const store = createTileStore(
     async (url) => {
-      const r = await fetch(url);
-      return r.ok ? r.json() : null;
+      try {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return await r.json();
+      } catch (err) {
+        lastFetchError = `${url.split('/').pop()}: ${err?.message ?? err}`;
+        return null;
+      }
     },
     () => {
       // Tile arrivals never interrupt an active drag (deferred to release).
@@ -125,7 +132,10 @@ async function bootInner(el, opts = {}) {
     const dt = performance.now() - t0;
     frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;
     lastPts = cmds.reduce((n, c) => n + (c.batches ? c.batches.reduce((m, b) => m + b.length, 0) : 0), 0);
-    if (perfEl) perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts ${store.size()}tiles`;
+    if (perfEl) {
+      const ready = [...tileCache.values()].filter((t) => t.lines).length;
+      perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts ${store.size()}tiles(${ready}ready)${lastFetchError ? ' FETCH:' + lastFetchError : ''}`;
+    }
   };
   // rAF coalescing: bursts of events render once per frame. Drag pans only
   // blit the cached frame (fast path); release re-renders crisply once.
@@ -135,7 +145,13 @@ async function bootInner(el, opts = {}) {
     queued = 'full';
     requestAnimationFrame(() => {
       queued = null;
-      draw(current);
+      try {
+        draw(current);
+      } catch (err) {
+        const hud = document.getElementById('hud');
+        if (hud) hud.innerHTML = `<strong>draw error</strong><span>${String(err?.message ?? err)}</span>`;
+        throw err;
+      }
     });
   }
   function schedulePan() {
