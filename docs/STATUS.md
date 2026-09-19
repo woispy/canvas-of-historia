@@ -54,6 +54,7 @@ denser z0/z1.
 - 2026-09-18: local repo wiped to a clean slate (`.git` kept; remote's 2 old commits untouched).
 - 2026-09-18: initial agent team created (`coder`, `analyst`, `reviewer`, `local-assist`), verified via `opencode agent list`.
 - 2026-09-20: autonomous team expanded to Director + architecture/geography/simulation/rendering/QA/forensic/performance specialists.
+- 2026-09-20: NVIDIA NIM added as a first-class inference lane with `@nim-coder` and `@nim-reasoning`; Ollama remains retired.
 - 2026-09-18: continuity docs + ADR-001; initial Ollama integration completed and smoke-tested, then retired in favor of hosted OpenCode Zen inference.
 - 2026-09-18: master brief filed; system architecture, 3 contract schemas, slice roadmap written.
 - 2026-09-18: Phase 0 scaffold green (`npm test` 15/15).
@@ -64,8 +65,9 @@ Details: `docs/work-log/2026-09-18-team-setup.md`, `2026-09-18-ollama.md`, `2026
 
 ## Next
 
-1. Smoke-test the new hosted-model agent roster with `opencode agent list`.
-2. Run the Historia AI-specific model capability benchmark and calibrate fallback/routing policy.
+1. Smoke-test the hosted + NVIDIA NIM agent roster with `opencode agent list`.
+2. Verify the configured NIM endpoint with `/v1/health/ready` and `/v1/models`.
+3. Run the Historia AI-specific model capability benchmark and calibrate Zen ↔ NIM fallback/routing policy.
 3. Continue the 1326 vertical slice; remaining schemas land with their phases (HGE, economy, tech, trade, military, character, AI, rendering, WebGPU).
 4. Add GitHub CI later.
 
