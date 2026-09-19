@@ -3,6 +3,9 @@
 
 import { STYLE_25D_V1 as S } from '../style.js';
 
+// Edge-fade masks cached by canvas-size+feather (module lifetime).
+const maskCache = new Map();
+
 // Elevation ramp stops: [meters, r, g, b]. Sea cells stay transparent
 // (the tint is clipped to land polygons anyway; this avoids edge bleed).
 const TERRAIN_RAMP = [
@@ -227,9 +230,13 @@ export function renderCanvas2D(ctx, width, height, commands) {
       case 'edge-fade': {
         // Scope vignette: dissolve truncated border geometry into the page.
         // Device-px mask (ctx is DPR-scaled), destination-in keeps the sea.
+        // Mask cached by size+feather: no per-frame allocation churn.
         const f = (cmd.featherPx ?? 0) * (ctx.canvas.width / width);
         if (f > 0) {
-          const mask = document.createElement('canvas');
+          const key = `${ctx.canvas.width}x${ctx.canvas.height}x${Math.round(f)}`;
+          let mask = maskCache.get(key);
+          if (!mask) {
+            mask = document.createElement('canvas');
           mask.width = ctx.canvas.width;
           mask.height = ctx.canvas.height;
           const m = mask.getContext('2d');
@@ -247,6 +254,9 @@ export function renderCanvas2D(ctx, width, height, commands) {
             grad.addColorStop(1, 'rgba(0,0,0,1)');
             m.fillStyle = grad;
             m.fillRect(rx, ry, rw, rh);
+          }
+          maskCache.set(key, mask);
+          if (maskCache.size > 4) maskCache.delete(maskCache.keys().next().value);
           }
           ctx.save();
           ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -93,14 +93,24 @@ export async function boot(rootElement, opts = {}) {
       const r = await fetch(url);
       return r.ok ? r.json() : null;
     },
-    () => scheduleFull(),
+    () => {
+      // Tile arrivals never interrupt an active drag (deferred to release).
+      if (!drag) scheduleFull();
+      else pendingTiles = true;
+    },
   );
   const draw = (s) => {
+    const t0 = performance.now();
     const tiles = store.ensure(visibleTileKeys(camera, width, height));
-    renderCanvas2D(offCtx, width, height, buildDisplayList(extractSnapshot(s), camera, width, height, tiles));
+    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles);
+    renderCanvas2D(offCtx, width, height, cmds);
     renderedScale = camera.scale;
     ctx.clearRect(0, 0, width, height);
     ctx.drawImage(off, 0, 0, width, height);
+    const dt = performance.now() - t0;
+    frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;
+    lastPts = cmds.reduce((n, c) => n + (c.batches ? c.batches.reduce((m, b) => m + b.length, 0) : 0), 0);
+    if (perfEl) perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts ${store.size()}tiles`;
   };
   // rAF coalescing: bursts of events render once per frame. Drag pans only
   // blit the cached frame (fast path); release re-renders crisply once.
@@ -160,14 +170,24 @@ export async function boot(rootElement, opts = {}) {
     return [event.clientX - rect.left, event.clientY - rect.top];
   };
 
-  // Wheel zoom anchors the world point under the cursor.
+  // Wheel zoom: instant approximate blit about the cursor, crisp re-render
+  // debounced 120ms after the gesture ends.
+  let wheelTimer = null;
   canvas.addEventListener(
     'wheel',
     (event) => {
       event.preventDefault();
       const [x, y] = toLocal(event);
+      const prevScale = camera.scale;
       camera = zoomAt(camera, width, height, x, y, event.deltaY < 0 ? 1.25 : 1 / 1.25);
-      scheduleFull();
+      const k = camera.scale / prevScale;
+      // Approximate: scale cached frame about the cursor, then sharpen.
+      ctx.clearRect(0, 0, width, height);
+      const sw = width / k;
+      const sh = height / k;
+      ctx.drawImage(off, 0, 0, off.width, off.height, x - sw / 2, y - sh / 2, sw, sh);
+      if (wheelTimer) clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => scheduleFull(), 120);
     },
     { passive: false },
   );
@@ -175,6 +195,12 @@ export async function boot(rootElement, opts = {}) {
   // Drag pans (blit fast path). A click without drag still selects (< 4px).
   let drag = null;
   let suppressClick = false;
+  let pendingTiles = false;
+  // Perf overlay (?perf=1): EMA frame ms + projected points + cached tiles.
+  const perfOn = typeof location !== 'undefined' && location.search.includes('perf=1');
+  const perfEl = perfOn ? (() => { const d = document.createElement('div'); d.id = 'perf'; document.body.appendChild(d); return d; })() : null;
+  let frameEma = 0;
+  let lastPts = 0;
   canvas.addEventListener('pointerdown', (event) => {
     drag = { x: event.clientX, y: event.clientY, moved: false };
     canvas.setPointerCapture(event.pointerId);
@@ -202,7 +228,7 @@ export async function boot(rootElement, opts = {}) {
     suppressClick = drag?.moved === true;
     drag = null;
     canvas.style.cursor = 'grab';
-    if (suppressClick) scheduleFull();
+    scheduleFull();
   };
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);

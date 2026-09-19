@@ -17,21 +17,37 @@ export function createTileStore(fetchJson, onChange) {
     for (const key of keys) {
       const hit = cache.get(key);
       if (hit?.lines) {
-        ready.push({ key, lines: hit.lines });
+        ready.push({ key, lines: hit.lines, bboxes: hit.bboxes });
       } else if (!hit) {
         cache.set(key, { pending: true });
         if (cache.size > TILE_CACHE_MAX) cache.delete(cache.keys().next().value);
         fetchJson(COAST_TILE_URL(key))
           .then((data) => {
-            cache.set(key, data && Array.isArray(data.lines) ? { lines: data.lines } : { lines: [] });
+            const lines = data && Array.isArray(data.lines) ? data.lines : [];
+            cache.set(key, { lines, bboxes: lines.map(lineBbox) });
             onChange?.();
           })
-          .catch(() => cache.set(key, { lines: [] }));
+          .catch(() => cache.set(key, { lines: [], bboxes: [] }));
       }
     }
     return ready;
   };
   return { get, ensure, size: () => cache.size };
+}
+
+// Per-line world bbox, computed ONCE at load (not per frame).
+function lineBbox(line) {
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let y0 = Infinity;
+  let y1 = -Infinity;
+  for (const [lon, lat] of line) {
+    if (lon < x0) x0 = lon;
+    if (lon > x1) x1 = lon;
+    if (lat < y0) y0 = lat;
+    if (lat > y1) y1 = lat;
+  }
+  return [x0, y0, x1, y1];
 }
 
 // Viewport world bbox → visible tile keys.
@@ -47,12 +63,16 @@ export function visibleTileKeys(camera, width, height) {
   return tileRangeForView(Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats));
 }
 
-// Pure: tile lines + camera → projected screen polylines (culled).
+// Pure: tile lines + camera → projected screen polylines.
+// Tiles may carry precomputed bboxes (from the store); otherwise computed.
 export function buildCoastLines(tiles, camera, width, height, stride = 1) {
   const out = [];
   for (const tile of tiles) {
-    for (const line of tile.lines ?? []) {
-      if (!lineVisible(line, camera, width, height)) continue;
+    const lines = tile.lines ?? [];
+    for (let li = 0; li < lines.length; li++) {
+      const line = lines[li];
+      const bbox = tile.bboxes?.[li] ?? lineBbox(line);
+      if (!bboxVisibleWorld(bbox, camera, width, height)) continue;
       const pts = [];
       for (let i = 0; i < line.length; i += stride) pts.push(project(camera, width, height, line[i]));
       if (line.length > 1 && (line.length - 1) % stride !== 0) {
@@ -64,40 +84,41 @@ export function buildCoastLines(tiles, camera, width, height, stride = 1) {
   return out;
 }
 
-function lineVisible(line, camera, width, height) {
-  const [cx] = camera.center;
-  let x0 = Infinity;
-  let x1 = -Infinity;
-  let y0 = Infinity;
-  let y1 = -Infinity;
-  for (const [lon, lat] of line) {
-    let x = lon;
-    while (x - cx > 180) x -= 360;
-    while (cx - x > 180) x += 360;
-    if (x < x0) x0 = x;
-    if (x > x1) x1 = x;
-    if (lat < y0) y0 = lat;
-    if (lat > y1) y1 = lat;
-  }
-  const pad = 48;
-  const corners = [
-    [x0, y0],
-    [x1, y0],
-    [x0, y1],
-    [x1, y1],
-  ];
+function shiftNear(lon, centerLon) {
+  let x = lon;
+  while (x - centerLon > 180) x -= 360;
+  while (centerLon - x > 180) x += 360;
+  return x;
+}
+
+function bboxVisibleWorld([x0, y0, x1, y1], camera, width, height) {
+  // Normalize near the camera center (antimeridian-safe), then project.
+  const cx = camera.center[0];
+  const nx0 = shiftNear(x0, cx);
+  const nx1 = shiftNear(x1, cx);
+  return bboxVisible([nx0, y0, nx1, y1], camera, width, height);
+}
+
+const CULL_PAD = 48;
+
+function bboxVisible([x0, y0, x1, y1], camera, width, height) {
   let sx0 = Infinity;
   let sx1 = -Infinity;
   let sy0 = Infinity;
   let sy1 = -Infinity;
-  for (const [lon, lat] of corners) {
+  for (const [lon, lat] of [
+    [x0, y0],
+    [x1, y0],
+    [x0, y1],
+    [x1, y1],
+  ]) {
     const [x, y] = project(camera, width, height, [lon, lat]);
     if (x < sx0) sx0 = x;
     if (x > sx1) sx1 = x;
     if (y < sy0) sy0 = y;
     if (y > sy1) sy1 = y;
   }
-  return sx1 >= -pad && sx0 <= width + pad && sy1 >= -pad && sy0 <= height + pad;
+  return sx1 >= -CULL_PAD && sx0 <= width + CULL_PAD && sy1 >= -CULL_PAD && sy0 <= height + CULL_PAD;
 }
 
 export { TILE_DEG };
