@@ -135,8 +135,7 @@ async function bootInner(el, opts = {}) {
     frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;
     lastPts = cmds.reduce((n, c) => n + (c.batches ? c.batches.reduce((m, b) => m + b.length, 0) : 0), 0);
     if (perfEl) {
-      const ready = [...tileCache.values()].filter((t) => t.lines).length;
-      perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts ${store.size()}tiles(${ready}ready)${lastFetchError ? ' FETCH:' + lastFetchError : ''}`;
+      perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts ${store.size()}tiles${lastFetchError ? ' FETCH:' + lastFetchError : ''}`;
     }
   };
   // rAF coalescing: bursts of events render once per frame. Drag pans only
