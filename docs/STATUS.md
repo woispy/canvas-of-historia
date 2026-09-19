@@ -1,6 +1,6 @@
 # Project Status — Canvas of Historia
 
-Updated: 2026-09-18
+Updated: 2026-09-20
 
 ## Phase
 
@@ -52,8 +52,9 @@ denser z0/z1.
 ## Done
 
 - 2026-09-18: local repo wiped to a clean slate (`.git` kept; remote's 2 old commits untouched).
-- 2026-09-18: agent team created (`coder`, `analyst`, `reviewer`, `local-assist`), verified via `opencode agent list`.
-- 2026-09-18: continuity docs + ADR-001; Ollama wired in and smoke-tested.
+- 2026-09-18: initial agent team created (`coder`, `analyst`, `reviewer`, `local-assist`), verified via `opencode agent list`.
+- 2026-09-20: autonomous team expanded to Director + architecture/geography/simulation/rendering/QA/forensic/performance specialists.
+- 2026-09-18: continuity docs + ADR-001; initial Ollama integration completed and smoke-tested, then retired in favor of hosted OpenCode Zen inference.
 - 2026-09-18: master brief filed; system architecture, 3 contract schemas, slice roadmap written.
 - 2026-09-18: Phase 0 scaffold green (`npm test` 15/15).
 - 2026-09-18: autonomous system report filed; S1 seed data green (20/20):
@@ -63,9 +64,10 @@ Details: `docs/work-log/2026-09-18-team-setup.md`, `2026-09-18-ollama.md`, `2026
 
 ## Next
 
-1. S2: flat Canvas 2D render from snapshot + rendering-contract test.
-2. Remaining schemas land with their phases (HGE, economy, tech, trade, military, character, AI, rendering, WebGPU).
-3. Add GitHub CI later; decide fresh git history at first commit.
+1. Smoke-test the new hosted-model agent roster with `opencode agent list`.
+2. Run the Historia AI-specific model capability benchmark and calibrate fallback/routing policy.
+3. Continue the 1326 vertical slice; remaining schemas land with their phases (HGE, economy, tech, trade, military, character, AI, rendering, WebGPU).
+4. Add GitHub CI later.
 
 ## Open questions
 
