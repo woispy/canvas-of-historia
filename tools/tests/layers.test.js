@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createLayerRegistry } from '../../src/map/layers/registry.js';
-import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor } from '../../src/map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor, createDrawThrottle } from '../../src/map/layers/coastline.js';
 import { createCamera } from '../../src/map/camera/camera.js';
 
 const W = 1200;
@@ -82,6 +82,35 @@ describe('layer architecture (ADR-010)', () => {
     assert.ok(keys.length >= 4 && keys.length <= 60, `sane count, got ${keys.length}`);
   });
 
+  it('draw throttle fires at most once per window, trailing wins', () => {
+    let now = 0;
+    let fires = 0;
+    const timers = [];
+    const origSetTimeout = globalThis.setTimeout;
+    globalThis.setTimeout = (fn, ms) => {
+      timers.push({ fn, at: now + ms });
+      return timers.length;
+    };
+    const origClear = globalThis.clearTimeout;
+    globalThis.clearTimeout = () => {};
+    try {
+      const go = createDrawThrottle(120, () => now, () => {
+        fires++;
+      });
+      go();
+      assert.equal(fires, 1, 'first call immediate');
+      go();
+      go();
+      assert.equal(fires, 1, 'burst coalesced');
+      assert.equal(timers.length, 1, 'one trailing timer');
+      now = 200;
+      timers[0].fn();
+      assert.equal(fires, 2, 'trailing fires once');
+    } finally {
+      globalThis.setTimeout = origSetTimeout;
+      globalThis.clearTimeout = origClear;
+    }
+  });
   it('buildCoastLines projects, culls, and strides', () => {
     const cam = createCamera({ center: [34, 39], scale: 100 });
     const tiles = [

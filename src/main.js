@@ -9,7 +9,7 @@
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
-import { createTileStore, visibleTileKeys, useOutline, levelFor, LEVEL_DEG } from './map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, useOutline, levelFor, LEVEL_DEG, createDrawThrottle } from './map/layers/coastline.js';
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
@@ -179,22 +179,29 @@ async function bootInner(el, opts = {}) {
       perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts L${levelFor(camera.scale)} t${stores[1].size() + stores[2].size()}${lastFetchError ? ' FETCH:' + lastFetchError : ''}`;
     }
   };
-  // rAF coalescing: bursts of events render once per frame. Drag pans only
-  // blit the cached frame (fast path); release re-renders crisply once.
+  // rAF coalescing + trailing throttle: bursts render once per frame, full
+  // redraws at most every 120ms (gestures stay fluid via blits).
   let queued = null;
+  const throttledFull = createDrawThrottle(
+    120,
+    () => performance.now(),
+    () => {
+      if (queued) return;
+      queued = 'full';
+      requestAnimationFrame(() => {
+        queued = null;
+        try {
+          draw(current);
+        } catch (err) {
+          const hud = document.getElementById('hud');
+          if (hud) hud.innerHTML = `<strong>draw error</strong><span>${String(err?.message ?? err)}</span>`;
+          throw err;
+        }
+      });
+    },
+  );
   function scheduleFull() {
-    if (queued) return;
-    queued = 'full';
-    requestAnimationFrame(() => {
-      queued = null;
-      try {
-        draw(current);
-      } catch (err) {
-        const hud = document.getElementById('hud');
-        if (hud) hud.innerHTML = `<strong>draw error</strong><span>${String(err?.message ?? err)}</span>`;
-        throw err;
-      }
-    });
+    throttledFull();
   }
   function schedulePan() {
     if (queued) return;

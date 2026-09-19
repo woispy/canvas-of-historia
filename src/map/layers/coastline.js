@@ -96,6 +96,38 @@ export function visibleTileKeys(camera, width, height, tileDeg = 4) {
 
 // Pure: tile lines + camera → projected screen polylines.
 // Tiles may carry precomputed bboxes (from the store); otherwise computed.
+// Trailing-edge throttle for full redraws: at most one per minMs, the last
+// request always wins. Pure (injected clock + scheduler) — unit-tested.
+export function createDrawThrottle(minMs, nowFn, scheduleFn) {
+  let last = -Infinity;
+  let timer = null;
+  let pending = false;
+  const fire = () => {
+    timer = null;
+    last = nowFn();
+    pending = false;
+  };
+  return () => {
+    const now = nowFn();
+    if (now - last >= minMs) {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      pending = false;
+      last = now;
+      scheduleFn();
+    } else if (!pending) {
+      pending = true;
+      timer = setTimeout(() => {
+        fire();
+        scheduleFn();
+      }, minMs - (now - last));
+    }
+  };
+}
+// Pure: tile lines + camera → projected screen polylines.
+// Tiles may carry precomputed bboxes (from the store); otherwise computed.
 export function buildCoastLines(tiles, camera, width, height, stride = 1) {
   const out = [];
   for (const tile of tiles) {
