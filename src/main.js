@@ -162,7 +162,7 @@ async function bootInner(el, opts = {}) {
       }
     } else {
       const keys = visibleTileKeys(camera, width, height, LEVEL_DEG[level]);
-      const tiles = stores[level].ensure(keys);
+      tiles = stores[level].ensure(keys);
       // Parent underlay: same viewport at the coarser level (stale but
       // present — never an empty hole while children stream in).
       let parent = [];
