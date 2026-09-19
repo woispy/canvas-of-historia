@@ -42,8 +42,8 @@ Clean slate (2026-09-19, green 57/57): ADR-008 — single-source chain
 (sea→land→wash→coastline→borders→markers→fade). Layers return one by one.
 Planet coast (2026-09-19, green 61/61): ADR-009 — OSM planet tiles (~100m,
 1246 tiles, strokes only, no fills). Next: verify paint, then gated layers.
-Lakes+era (2026-09-19, green 78/78): world lakes incl. Caspian at all zooms;
-Suez erased for 1326 + HISTORICAL-WATER policy + backlog.
+Lakes+era (2026-09-19, green 79/79): 399 notable lakes (Caspian/Van/Tuz kept);
+Suez erased + water policy; fetch retry helper tested.
 Layers+perf (2026-09-19, green 65/65 → 75/75): ADR-010/011/012 — isolated
 layer, batched strokes, rAF, lazy JSON (entry 25KB); manifest gate, pyramid,
 eviction fix; single-geometry interaction (no gesture stride, settled fade),

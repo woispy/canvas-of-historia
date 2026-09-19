@@ -7,6 +7,13 @@ import path from 'node:path';
 
 const EPSILON_DEG = 0.01;
 const QUANTIZE_DECIMALS = 4;
+// Only notable lakes render: bbox area ≥ this (km²) or theater allowlist.
+// Micro-lakes are visual noise + parse/render cost, never gameplay.
+const MIN_LAKE_KM2 = 1500;
+const THEATER_ALLOWLIST = [
+  { id: 'van', x0: 42.2, x1: 44.0, y0: 38.2, y1: 38.9 },
+  { id: 'tuz', x0: 32.8, x1: 33.9, y0: 38.3, y1: 39.0 },
+];
 
 function perpDist([px, py], [ax, ay], [bx, by]) {
   const dx = bx - ax;
@@ -37,6 +44,25 @@ const lakes = JSON.parse(
   readFileSync(path.join(root, 'data/sources/natural-earth/ne_10m_lakes.geojson'), 'utf8'),
 );
 const q = (n) => Math.round(n * 10 ** QUANTIZE_DECIMALS) / 10 ** QUANTIZE_DECIMALS;
+function bboxAreaKm2(ring) {
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let y0 = Infinity;
+  let y1 = -Infinity;
+  for (const [x, y] of ring) {
+    if (x < x0) x0 = x;
+    if (x > x1) x1 = x;
+    if (y < y0) y0 = y;
+    if (y > y1) y1 = y;
+  }
+  const latRef = (((y0 + y1) / 2) * Math.PI) / 180;
+  return (x1 - x0) * 111.32 * Math.cos(latRef) * ((y1 - y0) * 110.54);
+}
+function allowlisted(ring) {
+  return THEATER_ALLOWLIST.some((box) =>
+    ring.some(([x, y]) => x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1),
+  );
+}
 const out = [];
 for (const f of lakes.features ?? []) {
   const g = f.geometry;
@@ -46,6 +72,7 @@ for (const f of lakes.features ?? []) {
     // Outer ring only as stroke (lakes render as outlines in this phase).
     const ring = rings[0];
     if (!ring || ring.length < 4) continue;
+    if (bboxAreaKm2(ring) < MIN_LAKE_KM2 && !allowlisted(ring)) continue;
     const open = ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1]
       ? ring.slice(0, -1)
       : ring;

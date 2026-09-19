@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createLayerRegistry } from '../../src/map/layers/registry.js';
-import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor, selectLod, tileAlpha, createDrawThrottle, strideForScale, clipPolylineToRect } from '../../src/map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor, selectLod, tileAlpha, createDrawThrottle, strideForScale, clipPolylineToRect, fetchWithRetry } from '../../src/map/layers/coastline.js';
 import { createCamera } from '../../src/map/camera/camera.js';
 
 const W = 1200;
@@ -17,6 +17,29 @@ describe('layer architecture (ADR-010)', () => {
     assert.ok(ext.has('terrain') && ext.has('sea'));
   });
 
+  it('fetch retries once, then reports null', async () => {
+    let calls = 0;
+    const flaky = async () => {
+      calls++;
+      if (calls === 1) throw new Error('blip');
+      return { ok: true, json: async () => ({ lines: [] }) };
+    };
+    let reported = '';
+    const data = await fetchWithRetry(flaky, '/tiles/coast/1_1.json', (m) => {
+      reported = m;
+    });
+    assert.ok(data, 'recovered on retry');
+    assert.equal(calls, 2);
+    assert.equal(reported, '');
+    const dead = async () => {
+      throw new Error('down');
+    };
+    const none = await fetchWithRetry(dead, '/tiles/coast/9_9.json', (m) => {
+      reported = m;
+    });
+    assert.equal(none, null);
+    assert.ok(reported.includes('9_9.json'), 'error surfaced');
+  });
   it('tile store caches, caps, and notifies', async () => {
     let calls = 0;
     let notified = 0;

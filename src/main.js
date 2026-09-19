@@ -9,7 +9,7 @@
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
-import { createTileStore, visibleTileKeys, useOutline, levelFor, LEVEL_DEG, createDrawThrottle, selectLod } from './map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, useOutline, levelFor, LEVEL_DEG, createDrawThrottle, selectLod, fetchWithRetry } from './map/layers/coastline.js';
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
@@ -114,16 +114,13 @@ async function bootInner(el, opts = {}) {
       })
       .catch(() => {});
   }
-  const fetchTile = async (url) => {
-    try {
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return await r.json();
-    } catch (err) {
-      lastFetchError = `${url.split('/').pop()}: ${err?.message ?? err}`;
-      return null;
-    }
-  };
+  const fetchTile = (url) => fetchWithRetry(
+    (u) => fetch(u),
+    url,
+    (msg) => {
+      lastFetchError = msg;
+    },
+  );
   const onTile = () => {
     throttledTileDraw();
   };

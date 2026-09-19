@@ -118,6 +118,24 @@ export function visibleTileKeys(camera, width, height, tileDeg = 4) {
 
 // Pure: tile lines + camera → projected screen polylines.
 // Tiles may carry precomputed bboxes (from the store); otherwise computed.
+// Fetch with one retry: transient failures must not permanently blank tiles.
+// Pure over an injected fetch-like fn — unit-tested.
+export async function fetchWithRetry(fetchFn, url, onError) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const r = await fetchFn(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (err) {
+      if (attempt === 1) {
+        onError?.(`${url.split('/').pop()}: ${err?.message ?? err}`);
+        return null;
+      }
+    }
+  }
+  return null;
+}
+
 // Trailing-edge throttle for full redraws: at most one per minMs, the last
 // request always wins. Pure (injected clock + scheduler) — unit-tested.
 export function createDrawThrottle(minMs, nowFn, scheduleFn) {

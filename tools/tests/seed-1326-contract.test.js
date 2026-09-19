@@ -215,9 +215,12 @@ describe('1326 seed contracts', () => {
   });
   it('world lakes exist with Caspian, render as strokes', () => {
     const lakesWorld = load('public/data/lakes-world.json');
-    assert.ok(lakesWorld.rings.length >= 500, `lakes expected, got ${lakesWorld.rings.length}`);
-    const caspian = lakesWorld.rings.filter((r) => r.some(([x, y]) => x > 48 && x < 55 && y > 38 && y < 44));
-    assert.ok(caspian.length >= 1, 'Caspian present at every zoom');
+    assert.ok(lakesWorld.rings.length < 500, `minimal lakes only, got ${lakesWorld.rings.length}`);
+    const near = (x0, x1, y0, y1) => lakesWorld.rings.some((r) => r.some(([x, y]) => x >= x0 && x <= x1 && y >= y0 && y <= y1));
+    assert.ok(near(50, 52, 40, 42), 'Caspian present at every zoom');
+    assert.ok(near(42.2, 44.0, 38.2, 38.9), 'Van kept (theater)');
+    assert.ok(near(32.8, 33.9, 38.3, 39.0), 'Tuz kept (theater)');
+    assert.ok(near(104, 110, 51, 56), 'Baikal present');
   });
   it('Suez canal erased for 1326 (era rule)', () => {
     const tile = load('public/tiles/coast/53_30.json');
