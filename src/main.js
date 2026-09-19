@@ -13,7 +13,8 @@ import { createTileStore, visibleTileKeys, useOutline, levelFor, LEVEL_DEG, crea
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
-import { pickMarker, pickProvince } from './map/selection/pick.js';
+import { pickMarker, pickProvince, unproject } from './map/selection/pick.js';
+import { tileRangeForView } from './map/tiles.js';
 import { renderCityPanel, renderProvincePanel } from './app/panels.js';
 
 export const COH_VERSION = '0.1.0';
@@ -91,15 +92,8 @@ async function bootInner(el, opts = {}) {
   let camera = fitCamera(session.scenario.mapScope.bounds, width, height);
   const snapshot = extractSnapshot(session);
 
-  // Offscreen layer cache: full re-render on zoom/tile-arrival; pan blits.
-  const off = document.createElement('canvas');
-  off.width = canvas.width;
-  off.height = canvas.height;
-  const offCtx = off.getContext('2d');
-  offCtx.scale(dpr, dpr);
-  let renderedScale = -1;
-  let panDx = 0;
-  let panDy = 0;
+  // Direct render: no offscreen, no blits. Progressive stride (see draw)
+  // keeps gestures fast; release sharpens.
   let frameEma = 0;
   let lastPts = 0;
   const perfOn = typeof location !== 'undefined' && location.search.includes('perf=1');
@@ -115,7 +109,7 @@ async function bootInner(el, opts = {}) {
         if (m?.tiles) {
           manifests[level] = new Set(Object.keys(m.tiles));
           stores[level].knownTiles = manifests[level];
-          scheduleFull();
+          scheduleDraw();
         }
       })
       .catch(() => {});
@@ -131,9 +125,7 @@ async function bootInner(el, opts = {}) {
     }
   };
   const onTile = () => {
-    // Tile arrivals never interrupt an active drag (deferred to release).
-    if (!drag) scheduleFull();
-    else pendingTiles = true;
+    throttledTileDraw();
   };
   const stores = {
     1: createTileStore(fetchTile, onTile, null, (key) => `/tiles/coast1/${key}.json`),
@@ -153,7 +145,7 @@ async function bootInner(el, opts = {}) {
           .then((r) => (r.ok ? r.json() : null))
           .then((data) => {
             outline = data && Array.isArray(data.lines) ? { lines: data.lines } : { lines: [] };
-            scheduleFull();
+            scheduleDraw();
           })
           .catch(() => {
             outline = { lines: [] };
@@ -167,53 +159,36 @@ async function bootInner(el, opts = {}) {
     } else {
       tiles = stores[level].ensure(visibleTileKeys(camera, width, height, LEVEL_DEG[level]));
     }
-    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles);
-    renderCanvas2D(offCtx, width, height, cmds);
-    renderedScale = camera.scale;
-    ctx.clearRect(0, 0, width, height);
-    ctx.drawImage(off, 0, 0, width, height);
+    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles, { gesturing });
+    renderCanvas2D(ctx, width, height, cmds);
     const dt = performance.now() - t0;
     frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;
     lastPts = cmds.reduce((n, c) => n + (c.batches ? c.batches.reduce((m, b) => m + b.length, 0) : 0), 0);
     if (perfEl) {
-      perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts L${levelFor(camera.scale)} t${stores[1].size() + stores[2].size()}${lastFetchError ? ' FETCH:' + lastFetchError : ''}`;
+      perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts L${levelFor(camera.scale)}${gesturing ? ' gesto' : ''} t${stores[1].size() + stores[2].size()}${lastFetchError ? ' FETCH:' + lastFetchError : ''}`;
     }
   };
-  // rAF coalescing + trailing throttle: bursts render once per frame, full
-  // redraws at most every 120ms (gestures stay fluid via blits).
-  let queued = null;
-  const throttledFull = createDrawThrottle(
-    120,
-    () => performance.now(),
-    () => {
-      if (queued) return;
-      queued = 'full';
-      requestAnimationFrame(() => {
-        queued = null;
-        try {
-          draw(current);
-        } catch (err) {
-          const hud = document.getElementById('hud');
-          if (hud) hud.innerHTML = `<strong>draw error</strong><span>${String(err?.message ?? err)}</span>`;
-          throw err;
-        }
-      });
-    },
-  );
-  function scheduleFull() {
-    throttledFull();
-  }
-  function schedulePan() {
+  // One rAF coalescer: every frame at most one draw, always the latest state.
+  // Gesture progressiveness lives in draw (stride), not in approximations.
+  let queued = false;
+  // Gesture flag BEFORE first draw (TDZ-safe ordering).
+  let gesturing = false;
+  function scheduleDraw() {
     if (queued) return;
-    queued = 'pan';
+    queued = true;
     requestAnimationFrame(() => {
-      queued = null;
-      ctx.clearRect(0, 0, width, height);
-      ctx.drawImage(off, panDx, panDy, width, height);
-      panDx = 0;
-      panDy = 0;
+      queued = false;
+      try {
+        draw(current);
+      } catch (err) {
+        const hud = document.getElementById('hud');
+        if (hud) hud.innerHTML = `<strong>draw error</strong><span>${String(err?.message ?? err)}</span>`;
+        throw err;
+      }
     });
   }
+  // Tile arrivals use the trailing throttle (background, never urgent).
+  const throttledTileDraw = createDrawThrottle(300, () => performance.now(), scheduleDraw);
   draw(session);
   let current = session;
   const panel = document.getElementById('panel');
@@ -232,12 +207,12 @@ async function bootInner(el, opts = {}) {
       .join('');
     hud.querySelector('#advance').addEventListener('click', () => {
       current = advanceMonth(current);
-      scheduleFull();
+      scheduleDraw();
       renderHud();
     });
     const zoomCenter = (factor) => {
       camera = zoomAt(camera, width, height, width / 2, height / 2, factor);
-      scheduleFull();
+      scheduleDraw();
     };
     hud.querySelector('#zin').addEventListener('click', () => zoomCenter(1.5));
     hud.querySelector('#zout').addEventListener('click', () => zoomCenter(1 / 1.5));
@@ -250,32 +225,51 @@ async function bootInner(el, opts = {}) {
     return [event.clientX - rect.left, event.clientY - rect.top];
   };
 
-  // Wheel zoom: instant approximate blit about the cursor, crisp re-render
-  // debounced 120ms after the gesture ends.
-  let wheelTimer = null;
+  // Gesture state helpers (flag declared above for TDZ safety).
+  let gestureTimer = null;
+  const beginGesture = () => {
+    gesturing = true;
+    if (gestureTimer) {
+      clearTimeout(gestureTimer);
+      gestureTimer = null;
+    }
+  };
+  const endGesture = () => {
+    if (gestureTimer) clearTimeout(gestureTimer);
+    gestureTimer = setTimeout(() => {
+      gesturing = false;
+      prefetchNeighbors();
+      scheduleDraw();
+    }, 150);
+  };
+  // Warm the tile ring around the viewport so pans reveal loaded tiles.
+  const prefetchNeighbors = () => {
+    const level = levelFor(camera.scale);
+    if (level === 0) return;
+    const pad = 0.5;
+    const [ax, ay] = unproject(camera, width, height, [-width * pad, -height * pad]);
+    const [bx, by] = unproject(camera, width, height, [width * (1 + pad), height * (1 + pad)]);
+    stores[level].ensure(
+      tileRangeForView(Math.min(ax, bx), Math.min(ay, by), Math.max(ax, bx), Math.max(ay, by), LEVEL_DEG[level]),
+    );
+  };
   canvas.addEventListener(
     'wheel',
     (event) => {
       event.preventDefault();
       const [x, y] = toLocal(event);
-      const prevScale = camera.scale;
       camera = zoomAt(camera, width, height, x, y, event.deltaY < 0 ? 1.25 : 1 / 1.25);
-      const k = camera.scale / prevScale;
-      // Approximate: scale cached frame about the cursor, then sharpen.
-      ctx.clearRect(0, 0, width, height);
-      const sw = width / k;
-      const sh = height / k;
-      ctx.drawImage(off, 0, 0, off.width, off.height, x - sw / 2, y - sh / 2, sw, sh);
-      if (wheelTimer) clearTimeout(wheelTimer);
-      wheelTimer = setTimeout(() => scheduleFull(), 120);
+      beginGesture();
+      scheduleDraw();
+      endGesture();
     },
     { passive: false },
   );
 
-  // Drag pans (blit fast path). A click without drag still selects (< 4px).
+  // Drag pans synchronously (no blit tricks). A click without drag still
+  // selects (< 4px).
   let drag = null;
   let suppressClick = false;
-  let pendingTiles = false;
   canvas.addEventListener('pointerdown', (event) => {
     drag = { x: event.clientX, y: event.clientY, moved: false };
     canvas.setPointerCapture(event.pointerId);
@@ -290,20 +284,15 @@ async function bootInner(el, opts = {}) {
       camera = panBy(camera, width, height, dx, dy);
       drag.x = event.clientX;
       drag.y = event.clientY;
-      if (camera.scale === renderedScale) {
-        panDx += dx;
-        panDy += dy;
-        schedulePan();
-      } else {
-        scheduleFull();
-      }
+      scheduleDraw();
     }
   });
   const endDrag = () => {
     suppressClick = drag?.moved === true;
     drag = null;
     canvas.style.cursor = 'grab';
-    scheduleFull();
+    endGesture();
+    scheduleDraw();
   };
   canvas.addEventListener('pointerup', endDrag);
   canvas.addEventListener('pointercancel', endDrag);

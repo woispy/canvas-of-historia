@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createLayerRegistry } from '../../src/map/layers/registry.js';
-import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor, createDrawThrottle } from '../../src/map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor, createDrawThrottle, strideForScale } from '../../src/map/layers/coastline.js';
 import { createCamera } from '../../src/map/camera/camera.js';
 
 const W = 1200;
@@ -82,6 +82,14 @@ describe('layer architecture (ADR-010)', () => {
     assert.ok(keys.length >= 4 && keys.length <= 60, `sane count, got ${keys.length}`);
   });
 
+  it('gesture stride quadruples, release restores full detail', () => {
+    assert.equal(strideForScale(800, false), 1);
+    assert.equal(strideForScale(800, true), 4);
+    assert.equal(strideForScale(50, false), 2);
+    assert.equal(strideForScale(50, true), 8);
+    assert.equal(strideForScale(10, false), 4);
+    assert.equal(strideForScale(10, true), 16);
+  });
   it('draw throttle fires at most once per window, trailing wins', () => {
     let now = 0;
     let fires = 0;

@@ -69,23 +69,17 @@ const visibleRings = (rings, camera, width, height) =>
     height,
   );
 
-import { buildCoastLines } from '../layers/coastline.js';
+import { buildCoastLines, strideForScale } from '../layers/coastline.js';
 
-// Adaptive stride: sub-pixel detail is skipped at far zoom (documented,
-// invisible by construction — a dropped point moves < 1px on screen).
-function strideFor(scale) {
-  if (scale < 30) return 4;
-  if (scale < 100) return 2;
-  return 1;
-}
-
-export function buildDisplayList(snapshot, camera, width, height, coastTiles = []) {
+export function buildDisplayList(snapshot, camera, width, height, coastTiles = [], opts = {}) {
   const commands = [{ type: 'sea' }];
   const refLat = ((camera.refLat ?? camera.center[1]) * Math.PI) / 180;
   const pxPerDeg = camera.scale * Math.cos(refLat);
+  // Progressive refinement: light stride while gesturing, full on release.
+  const stride = strideForScale(camera.scale, opts.gesturing === true);
   // Coastlines-only step: ONE batched command (single canvas path).
   const batches = [];
-  for (const line of buildCoastLines(coastTiles, camera, width, height, strideFor(camera.scale))) {
+  for (const line of buildCoastLines(coastTiles, camera, width, height, stride)) {
     batches.push(line.points);
   }
   if (batches.length > 0) commands.push({ type: 'coastline-batch', batches });

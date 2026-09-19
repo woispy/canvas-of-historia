@@ -128,6 +128,16 @@ export function createDrawThrottle(minMs, nowFn, scheduleFn) {
 }
 // Pure: tile lines + camera → projected screen polylines.
 // Tiles may carry precomputed bboxes (from the store); otherwise computed.
+// Adaptive stride by zoom AND gesture state. During active gestures the
+// stride quadruples (progressive refinement): the map tracks the pointer 1:1
+// with zero approximations, then sharpens on release.
+export function strideForScale(scale, gesturing = false) {
+  const base = scale < 30 ? 4 : scale < 100 ? 2 : 1;
+  return gesturing ? base * 4 : base;
+}
+
+// Pure: tile lines + camera → projected screen polylines.
+// Tiles may carry precomputed bboxes (from the store); otherwise computed.
 export function buildCoastLines(tiles, camera, width, height, stride = 1) {
   const out = [];
   for (const tile of tiles) {
