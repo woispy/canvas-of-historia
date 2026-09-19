@@ -160,13 +160,7 @@ async function bootInner(el, opts = {}) {
       tiles = stores[level].ensure(visibleTileKeys(camera, width, height, LEVEL_DEG[level]));
     }
     const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles, { gesturing, emaMs: frameEma });
-    // Sharpen crossfade: a few translucent passes over the gesture frame so
-    // the detail pop dissolves instead of snapping.
-    const alpha = fadeAlphas.length > 0 ? fadeAlphas.shift() : 1;
-    ctx.globalAlpha = alpha;
     renderCanvas2D(ctx, width, height, cmds);
-    ctx.globalAlpha = 1;
-    if (fadeAlphas.length > 0) scheduleDraw();
     const dt = performance.now() - t0;
     frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;
     lastPts = cmds.reduce((n, c) => n + (c.batches ? c.batches.reduce((m, b) => m + b.length, 0) : 0), 0);
@@ -179,7 +173,6 @@ async function bootInner(el, opts = {}) {
   let queued = false;
   // Gesture flag BEFORE first draw (TDZ-safe ordering).
   let gesturing = false;
-  let fadeAlphas = [];
   function scheduleDraw() {
     if (queued) return;
     queued = true;
@@ -236,7 +229,6 @@ async function bootInner(el, opts = {}) {
   let gestureTimer = null;
   const beginGesture = () => {
     gesturing = true;
-    fadeAlphas = [];
     if (gestureTimer) {
       clearTimeout(gestureTimer);
       gestureTimer = null;
@@ -246,7 +238,6 @@ async function bootInner(el, opts = {}) {
     if (gestureTimer) clearTimeout(gestureTimer);
     gestureTimer = setTimeout(() => {
       gesturing = false;
-      fadeAlphas = [0.35, 0.7, 1];
       prefetchNeighbors();
       scheduleDraw();
     }, 90);

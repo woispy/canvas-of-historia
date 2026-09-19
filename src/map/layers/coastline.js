@@ -133,10 +133,68 @@ export function createDrawThrottle(minMs, nowFn, scheduleFn) {
 // detail back. Pure and unit-tested.
 export function strideForScale(scale, gesturing = false, emaMs = 0) {
   let s = scale < 30 ? 4 : scale < 100 ? 2 : 1;
-  if (gesturing) s *= 4;
+  if (gesturing) s *= 2;
   if (emaMs > 40) s *= 2;
   if (emaMs > 80) s *= 2;
   return Math.min(s, 32);
+}
+
+// Clip a screen-space polyline to the viewport (+pad). Segments fully
+// outside vanish; crossing segments are cut at the border. Pure, tested.
+// This is what makes full-detail gestures affordable: the rasterizer never
+// sees off-screen geometry.
+export function clipPolylineToRect(points, width, height, pad = 2) {
+  const out = [];
+  let current = [];
+  const intersect = (a, b) => {
+    // Liang-Barsky against the padded rect.
+    const [x0, y0] = a;
+    const [x1, y1] = b;
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    let t0 = 0;
+    let t1 = 1;
+    const xMin = -pad;
+    const xMax = width + pad;
+    const yMin = -pad;
+    const yMax = height + pad;
+    for (const [p, q] of [[-dx, x0 - xMin], [dx, xMax - x0], [-dy, y0 - yMin], [dy, yMax - y0]]) {
+      if (Math.abs(p) < 1e-12) {
+        if (q < 0) return null;
+      } else {
+        const t = q / p;
+        if (p < 0) {
+          if (t > t1) return null;
+          if (t > t0) t0 = t;
+        } else {
+          if (t < t0) return null;
+          if (t < t1) t1 = t;
+        }
+      }
+    }
+    if (t0 > t1) return null;
+    return [[x0 + dx * t0, y0 + dy * t0], [x0 + dx * t1, y0 + dy * t1]];
+  };
+  for (let i = 0; i < points.length - 1; i++) {
+    const seg = intersect(points[i], points[i + 1]);
+    if (!seg) {
+      if (current.length >= 2) out.push(current);
+      current = [];
+      continue;
+    }
+    const [p, q] = seg;
+    if (current.length === 0) current.push(p);
+    else {
+      const last = current[current.length - 1];
+      if (Math.abs(last[0] - p[0]) > 1e-9 || Math.abs(last[1] - p[1]) > 1e-9) {
+        if (current.length >= 2) out.push(current);
+        current = [p];
+      }
+    }
+    current.push(q);
+  }
+  if (current.length >= 2) out.push(current);
+  return out;
 }
 
 // Pure: tile lines + camera → projected screen polylines.

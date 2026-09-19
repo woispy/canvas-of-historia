@@ -23,3 +23,15 @@ Map must track the pointer stably — no blits, no approximations, no flashes.
   gesture frame — detail dissolves in instead of snapping. New gesture
   cancels the fade. Release delay 150ms → 90ms.
 - 71/71 green.
+
+## Flicker post-mortem (same day — pır pır/flash on transitions)
+
+Root cause: the crossfade alpha-blended TWO DIFFERENT geometries (coarse
+gesture stride vs full release stride) = ghost double-image. Fix removes the
+disease, not the symptom:
+- Screen-space segment clip (`clipPolylineToRect`, tested): rasterizer only
+  sees visible geometry → full detail affordable during gestures.
+- Gesture stride relaxed ×4 → ×2 (governor unchanged).
+- Crossfade deleted entirely: release draws the same geometry family, so
+  there is nothing to pop. No alpha tricks anywhere.
+- 72/72 green.

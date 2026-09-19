@@ -2,6 +2,7 @@
 // Layout math lives in displayList.js — this file only paints.
 
 import { STYLE_25D_V1 as S } from '../style.js';
+import { clipPolylineToRect } from '../../layers/coastline.js';
 
 // Edge-fade masks cached by canvas-size+feather (module lifetime).
 const maskCache = new Map();
