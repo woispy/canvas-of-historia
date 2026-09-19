@@ -35,70 +35,41 @@ describe('rendering contract (S2)', () => {
     assert.equal(snap.markers.length, 6);
   });
 
-  it('coastline LOD switches base ↔ HD by zoom', async () => {
-    const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
-    const snap = extractSnapshot(session);
-    const coastKinds = (cmds) => cmds.filter((c) => c.type === 'coast-bands' || c.type === 'coastline');
-    const far = coastKinds(buildDisplayList(snap, createCamera({ scale: 100 }), W, H));
-    const near = coastKinds(buildDisplayList(snap, createCamera({ scale: 800 }), W, H));
-    assert.ok(far.length > 0 && far.every((c) => c.detail === 'base'));
-    assert.ok(near.length > 0 && near.every((c) => c.detail === 'hd'));
-    const farPts = far.reduce((n, c) => n + c.points.length, 0);
-    const nearPts = near.reduce((n, c) => n + c.points.length, 0);
-    // Far layer is global: compare theater-scoped density instead of totals.
-    // HD (24k theater pts) must dwarf the base slice visible in-theater.
-    assert.ok(farPts > 0 && nearPts > 0, 'both layers carry points');
-    assert.ok(nearPts > 5000, `HD detail present up close: ${nearPts} pts`);
-  });
-
-  it('carve sits after fills, crisp stroke on top, fade last', async () => {
+  it('clean chain order: sea → land → wash → coastline → borders → markers → fade', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
     const cmds = buildDisplayList(snap, createCamera({ scale: 100 }), W, H);
     const kinds = cmds.map((c) => c.type);
-    const bands = kinds.indexOf('coast-bands');
+    assert.equal(cmds[0].type, 'sea');
     const land = kinds.indexOf('land-fill');
     const fill = kinds.indexOf('province-fill');
-    const carve = kinds.indexOf('coast-carve');
     const crisp = kinds.indexOf('coastline');
+    const border = kinds.indexOf('province-border');
+    const marker = kinds.indexOf('marker');
     const fade = kinds.indexOf('edge-fade');
-    assert.ok([bands, land, fill, carve, crisp, fade].every((i) => i !== -1), 'all stages present');
-    assert.ok(bands < land, 'bands under land (sea-side-only illusion)');
-    assert.ok(fill < carve && carve < crisp, 'carve trims fills, crisp stroke on top');
-    assert.ok(!kinds.includes('coast-shore'), 'tan ribbon removed');
+    assert.ok([land, fill, crisp, border, marker, fade].every((i) => i !== -1), 'all stages present');
+    assert.ok(land < fill && fill < crisp && crisp < border && border < marker && marker < fade, 'fixed order');
     assert.equal(fade, kinds.length - 1, 'fade is the final command');
+    for (const retired of ['coast-bands', 'coast-carve', 'coast-shore', 'waterway', 'sea-fill', 'terrain-tint', 'lake-fill', 'river', 'land-fill-osm', 'land-fill-country']) {
+      assert.ok(!kinds.includes(retired), `retired layer absent: ${retired}`);
+    }
   });
 
-  it('band widths and fade feather grow with zoom (world degrees, not px)', async () => {
+  it('fade feather grows with zoom (world degrees, not px)', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
-    const listAt = (scale) => buildDisplayList(snap, createCamera({ scale }), W, H);
-    const widthsAt = (scale) => listAt(scale).find((c) => c.type === 'coast-bands').widths;
-    const fadeAt = (scale) => listAt(scale).find((c) => c.type === 'edge-fade').featherPx;
-    const far = widthsAt(100);
-    const near = widthsAt(800);
-    assert.equal(far.length, 3);
-    assert.ok(near.every((w, i) => w > far[i]), `widths scale with zoom: ${far} vs ${near}`);
+    const fadeAt = (scale) =>
+      buildDisplayList(snap, createCamera({ scale }), W, H).find((c) => c.type === 'edge-fade').featherPx;
     assert.ok(fadeAt(800) > fadeAt(100), 'feather scales with zoom');
   });
 
-  it('OSM overdraw + waterway order + Pacific culling', async () => {
+  it('Pacific view draws global base, culls theater detail', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
-    const kinds = buildDisplayList(snap, createCamera({ scale: 800 }), W, H).map((c) => c.type);
-    assert.ok(kinds.filter((k) => k === 'land-fill-osm').length >= 1, 'OSM overdraw present');
-    assert.ok(kinds.filter((k) => k === 'land-fill-country').length >= 1, 'country fills present');
-    assert.ok(kinds.indexOf('sea-fill') !== -1, 'explicit seas rendered');
-    assert.ok(kinds.indexOf('sea-fill') < kinds.indexOf('land-fill'), 'seas under land fills');
-    assert.ok(kinds.indexOf('waterway') !== -1, 'waterways rendered');
-    assert.ok(kinds.indexOf('waterway') > kinds.indexOf('province-fill'), 'waterway after fills');
-    assert.ok(kinds.indexOf('waterway') < kinds.indexOf('coastline'), 'waterway under crisp stroke');
-    // Pacific view: global base draws, theater layers cull away.
     const far = buildDisplayList(snap, createCamera({ center: [-150, 0], scale: 60 }), W, H);
     const farKinds = far.map((c) => c.type);
     assert.ok(farKinds.includes('land-fill'), 'global base still draws');
-    assert.ok(!farKinds.includes('land-fill-osm'), 'OSM theater culled');
-    assert.ok(!far.some((c) => c.detail === 'hd'), 'HD strokes culled');
+    assert.ok(farKinds.includes('coastline'), 'global coastline still draws');
   });
   it('smoothing preserves endpoints and softens corners', () => {
     const jagged = [[0, 0], [10, 0], [10, 10], [20, 10]];
@@ -119,11 +90,7 @@ describe('rendering contract (S2)', () => {
     const kinds = cmds.map((c) => c.type);
     assert.equal(cmds[0].type, 'sea');
     assert.ok(kinds.filter((k) => k === 'land-fill').length >= 1, 'landmass rendered');
-    assert.ok(kinds.filter((k) => k === 'lake-fill').length >= 1, 'lakes rendered');
-    assert.ok(kinds.filter((k) => k === 'river').length >= 1, 'rivers rendered');
-    assert.ok(kinds.filter((k) => k === 'terrain-tint').length >= 1, 'terrain tint present');
-    assert.ok(kinds.filter((k) => k === 'coast-bands').length >= 1, 'shallow bands present');
-    assert.ok(kinds.filter((k) => k === 'coastline').length >= 1, 'crisp coastline present');
+    assert.ok(kinds.filter((k) => k === 'coastline').length >= 1, 'single-source coastline present');
     assert.equal(kinds.filter((k) => k === 'province-fill').length, 6);
     const fills = cmds.filter((c) => c.type === 'province-fill');
     assert.ok(

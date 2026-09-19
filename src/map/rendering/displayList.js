@@ -1,20 +1,15 @@
 // Display list: snapshot + camera → draw commands with screen coordinates.
-// Pure and fully testable without a browser. Backends (Canvas2D now,
-// WebGPU later) only execute commands; they never compute layout.
+// Pure and fully testable without a browser.
 //
-// Masking rule (ADR-004/006): fills come from closed land polygons, strokes
-// from the same lines. NE global is the complete base; verified OSM theater
-// polygons overdraw it in the SAME style (seamless). Washes clip to land.
+// CLEAN-SLATE PROTOCOL (ADR-008): ONE land source (NE global), ONE coastline
+// (the same rings), flat sea. No depth bands, no carve, no waterways, no
+// terrain, no overlays. New layers return ONE AT A TIME, user-gated, each
+// with its own test proving no spill/gap.
 
 import { project, projectRing } from '../camera/camera.js';
 import { smoothPolyline } from './smooth.js';
-import { STYLE_25D_V1 as STYLE } from './style.js';
 
-// LOD: the OSM high-detail twin takes over once points would land denser
-// than ~4px apart. Strokes hard-swap (no ghosting); fills overdraw identical.
-export const HD_MIN_SCALE = 250;
-
-// Cull margin in px (stroke widths + smoothing stay inside).
+// Cull margin in px (strokes stay inside).
 const CULL_PAD = 48;
 
 function shiftNear(lon, centerLon) {
@@ -24,7 +19,6 @@ function shiftNear(lon, centerLon) {
   return x;
 }
 
-// World-bbox of points, normalized near the camera center (antimeridian-safe).
 function worldBbox(points, centerLon) {
   let x0 = Infinity;
   let x1 = -Infinity;
@@ -41,7 +35,6 @@ function worldBbox(points, centerLon) {
 }
 
 function bboxVisible([x0, y0, x1, y1], camera, width, height) {
-  // Project bbox corners; pad for strokes. Conservative by design.
   const corners = [
     [x0, y0],
     [x1, y0],
@@ -78,39 +71,9 @@ const visibleRings = (rings, camera, width, height) =>
 
 export function buildDisplayList(snapshot, camera, width, height) {
   const commands = [{ type: 'sea' }];
-  // Explicit water overlays FIRST (open-water cores): land fills drawn later
-  // cover any overlap, so these can be generous without risk.
-  for (const s of snapshot.seas ?? []) {
-    if (!visibleRings(s.rings, camera, width, height)) continue;
-    commands.push({
-      type: 'sea-fill',
-      id: s.id,
-      rings: s.rings.map((ring) => projectRing(camera, width, height, ring)),
-    });
-  }
-  const hd = camera.scale >= HD_MIN_SCALE && (snapshot.coastlineHd ?? []).length > 0;
-  const coastSource = hd ? snapshot.coastlineHd : snapshot.coastline;
-  const coastDetail = hd ? 'hd' : 'base';
   const refLat = ((camera.refLat ?? camera.center[1]) * Math.PI) / 180;
   const pxPerDeg = camera.scale * Math.cos(refLat);
-  const bandWidths = STYLE.sea.bands.map((b) => Math.max(1, b.widthDeg * pxPerDeg));
-  const carveWidth = Math.max(2, STYLE.carve.widthDeg * pxPerDeg);
-  // Two Chaikin passes for strokes. Smoothing is render-time only.
-  const smoothCoast = (seg) =>
-    smoothPolyline(smoothPolyline(seg.points.map((pt) => project(camera, width, height, pt))));
-  // Paint order: sea → bands → land (+OSM overdraw) → … → carve →
-  // waterways → crisp stroke → provinces → markers → fade.
-  for (const seg of coastSource) {
-    if (!visiblePoints(seg.points, camera, width, height)) continue;
-    commands.push({
-      type: 'coast-bands',
-      id: seg.id,
-      detail: coastDetail,
-      widths: bandWidths,
-      points: smoothCoast(seg),
-    });
-  }
-  // Projected NE land rings (global base). OSM overlay below re-uses them.
+  // Land fills first (global, culled). Fill and stroke share the same rings.
   const landScreen = [];
   for (const poly of snapshot.land ?? []) {
     if (!visibleRings(poly.rings, camera, width, height)) continue;
@@ -118,53 +81,7 @@ export function buildDisplayList(snapshot, camera, width, height) {
     landScreen.push(...rings);
     commands.push({ type: 'land-fill', id: poly.id, rings });
   }
-  // Verified OSM theater overdraw: same style, exact island/mainland edges.
-  const osmScreen = [];
-  for (const poly of snapshot.landOsm ?? []) {
-    if (!visibleRings(poly.rings, camera, width, height)) continue;
-    const rings = poly.rings.map((ring) => projectRing(camera, width, height, ring));
-    osmScreen.push(...rings);
-    commands.push({ type: 'land-fill-osm', id: poly.id, rings });
-  }
-  // Theater country fills: same style overdraw, exact where OSM verified.
-  for (const poly of snapshot.landCountries ?? []) {
-    if (!visibleRings(poly.rings, camera, width, height)) continue;
-    commands.push({
-      type: 'land-fill-country',
-      id: poly.id,
-      rings: poly.rings.map((ring) => projectRing(camera, width, height, ring)),
-    });
-  }
-  for (const lake of snapshot.lakes ?? []) {
-    if (!visibleRings(lake.rings, camera, width, height)) continue;
-    commands.push({
-      type: 'lake-fill',
-      id: lake.id,
-      rings: lake.rings.map((ring) => projectRing(camera, width, height, ring)),
-    });
-  }
-  if (snapshot.terrain) {
-    const t = snapshot.terrain;
-    const [tx0, ty0] = project(camera, width, height, [t.bounds.west, t.bounds.north]);
-    const [tx1, ty1] = project(camera, width, height, [t.bounds.east, t.bounds.south]);
-    commands.push({
-      type: 'terrain-tint',
-      grid: t,
-      x: tx0,
-      y: ty0,
-      w: tx1 - tx0,
-      h: ty1 - ty0,
-      landRings: landScreen,
-    });
-  }
-  for (const r of snapshot.rivers ?? []) {
-    if (!visiblePoints(r.points, camera, width, height)) continue;
-    commands.push({
-      type: 'river',
-      id: r.id,
-      points: r.points.map((pt) => project(camera, width, height, pt)),
-    });
-  }
+  // Political washes, clipped to land: never enter the sea.
   for (const p of snapshot.provinces) {
     commands.push({
       type: 'province-fill',
@@ -174,22 +91,17 @@ export function buildDisplayList(snapshot, camera, width, height) {
       landClip: landScreen,
     });
   }
-  // Protected waterways BEFORE crisp strokes: guaranteed open straits with
-  // their shores redrawn on top.
-  for (const w of snapshot.waterways ?? []) {
-    commands.push({
-      type: 'waterway',
-      id: w.id,
-      width: Math.max(2, w.widthDeg * pxPerDeg),
-      points: w.points.map((pt) => project(camera, width, height, pt)),
-    });
-  }
-  // Carve AFTER fills (trims boxes to shore) but BEFORE borders/markers.
-  for (const seg of coastSource) {
-    if (!visiblePoints(seg.points, camera, width, height)) continue;
-    const pts = smoothCoast(seg);
-    commands.push({ type: 'coast-carve', id: seg.id, detail: coastDetail, width: carveWidth, points: pts });
-    commands.push({ type: 'coastline', id: seg.id, detail: coastDetail, points: pts });
+  // ONE coastline, from the same rings as the fill. Plain black, smoothed.
+  for (const poly of snapshot.land ?? []) {
+    for (const ring of poly.rings) {
+      const pts = ring.map((pt) => project(camera, width, height, pt));
+      if (!bboxVisible(worldBbox(ring, camera.center[0]), camera, width, height)) continue;
+      commands.push({
+        type: 'coastline',
+        id: poly.id,
+        points: smoothPolyline(smoothPolyline(pts)),
+      });
+    }
   }
   for (const p of snapshot.provinces) {
     commands.push({ type: 'province-border', id: p.id, ring: projectRing(camera, width, height, p.ring) });

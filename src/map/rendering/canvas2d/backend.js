@@ -102,46 +102,20 @@ export function renderCanvas2D(ctx, width, height, commands) {
         break;
       }
       case 'sea-fill': {
-        // Explicit water (straits, enclosed seas): flat sea tone, no stroke —
-        // OSM crisp strokes drawn later define the exact edge.
-        ctx.fillStyle = S.sea.shallow;
-        ctx.beginPath();
-        for (const ring of cmd.rings) {
-          ctx.moveTo(ring[0][0], ring[0][1]);
-          for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
-          ctx.closePath();
-        }
-        ctx.fill('evenodd');
+        // RETIRED (clean-slate reset): explicit water overlays return with the
+        // sea-systems phase, one layer at a time.
         break;
       }
       case 'coast-bands': {
-        // Painted before land: the fill covers the land-side half, so the
-        // shallow effect survives only seaward. Widths arrive in px,
-        // computed from world degrees in displayList.
-        const widths = cmd.widths ?? S.sea.bands.map((b) => b.widthDeg * 1000);
-        S.sea.bands.forEach((band, i) => {
-          ctx.strokeStyle = band.color;
-          ctx.lineWidth = widths[i] ?? 1;
-          ctx.lineJoin = 'round';
-          tracePolyline(ctx, cmd.points);
-          ctx.stroke();
-        });
+        // RETIRED (clean-slate reset).
         break;
       }
       case 'coast-carve': {
-        // Sea-tone eraser around OSM truth: removes terrain/land spill and
-        // un-bridges narrow straits. Reads as water.
-        ctx.strokeStyle = S.carve.color;
-        ctx.lineWidth = cmd.width ?? 2;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        tracePolyline(ctx, cmd.points);
-        ctx.stroke();
+        // RETIRED (clean-slate reset).
         break;
       }
       case 'coastline': {
-        // Crisp stroke on top of everything coastal. No glow: at HD zoom the
-        // glow read as blur, not depth.
+        // THE coastline: same rings as the fill, plain black, smoothed.
         ctx.strokeStyle = S.coastline.color;
         ctx.lineWidth = S.coastline.width;
         ctx.lineJoin = 'round';
@@ -150,13 +124,7 @@ export function renderCanvas2D(ctx, width, height, commands) {
         break;
       }
       case 'waterway': {
-        // Protected straits: guaranteed open water, verified visually.
-        ctx.strokeStyle = S.carve.color;
-        ctx.lineWidth = cmd.width ?? 4;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        tracePolyline(ctx, cmd.points);
-        ctx.stroke();
+        // RETIRED (clean-slate reset).
         break;
       }
       case 'land-fill': {
@@ -179,54 +147,31 @@ export function renderCanvas2D(ctx, width, height, commands) {
         break;
       }
       case 'land-fill-osm': {
-        // Verified-theater overdraw, identical style to base: seamless.
-        ctx.fillStyle = S.land.base;
-        ctx.beginPath();
-        for (const ring of cmd.rings) {
-          ctx.moveTo(ring[0][0], ring[0][1]);
-          for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
-          ctx.closePath();
-        }
-        ctx.fill('evenodd');
+        // RETIRED (clean-slate reset): OSM theater overlay returns with HD detail.
         break;
       }
       case 'land-fill-country': {
-        // Theater country overdraw, identical style: seamless.
-        ctx.fillStyle = S.land.base;
-        ctx.beginPath();
-        for (const ring of cmd.rings) {
-          ctx.moveTo(ring[0][0], ring[0][1]);
-          for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
-          ctx.closePath();
-        }
-        ctx.fill('evenodd');
+        // RETIRED (clean-slate reset).
+        break;
+      }
+      case 'land-fill-osm': {
+        // RETIRED (clean-slate reset): OSM theater overlay returns with HD detail.
+        break;
+      }
+      case 'land-fill-country': {
+        // RETIRED (clean-slate reset).
         break;
       }
       case 'terrain-tint': {
-        paintTerrainTint(ctx, cmd);
+        // RETIRED (clean-slate reset): terrain returns as its own phase.
         break;
       }
       case 'lake-fill': {
-        ctx.fillStyle = S.lake.fill;
-        ctx.beginPath();
-        for (const ring of cmd.rings) {
-          ctx.moveTo(ring[0][0], ring[0][1]);
-          for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
-          ctx.closePath();
-        }
-        ctx.fill('evenodd');
-        ctx.strokeStyle = S.lake.edge;
-        ctx.lineWidth = S.lake.edgeWidth;
-        ctx.stroke();
+        // RETIRED (clean-slate reset): hydrography returns as its own phase.
         break;
       }
       case 'river': {
-        ctx.strokeStyle = S.river.color;
-        ctx.lineWidth = S.river.width;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        tracePolyline(ctx, cmd.points);
-        ctx.stroke();
+        // RETIRED (clean-slate reset).
         break;
       }
       case 'province-fill': {

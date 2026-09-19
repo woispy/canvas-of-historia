@@ -38,6 +38,8 @@ Masking final form (2026-09-19, green 56/56): ADR-006 — verified OSM overdraw
 culling, black crisp line. East mainland precision → Phase 5.
 Rebuild (2026-09-19, green 58/58): ADR-007 — country fills (10 countries,
 54 polys) + explicit seas painted first + fixed pass order.
+Clean slate (2026-09-19, green 57/57): ADR-008 — single-source chain
+(sea→land→wash→coastline→borders→markers→fade). Layers return one by one.
 
 ## Done
 
