@@ -12,11 +12,13 @@ and there is no CI pipeline yet.
 ## Decision
 
 1. All development and tests run locally (Node 24, npm 11).
-2. GitHub (`woispy/canvas-of-historia`) is used as mirror + backup only.
+2. OpenCode Zen hosted models are the default inference layer; no local LLM runtime is required.
+3. GitHub (`woispy/canvas-of-historia`) is used as mirror + backup only.
 3. No agent pushes without explicit user approval.
 4. A fast local test gate is added with the first scaffold; GitHub Actions CI
    (layered: fast PR gate + slow nightly) is added later, once the project
    structure stabilizes.
+5. Model assignments are versioned in `.opencode/agents/*.md`; provider credentials remain outside the repository.
 
 ## Consequences
 
