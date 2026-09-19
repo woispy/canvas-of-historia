@@ -15,7 +15,11 @@ const inBox = ([lon, lat], [w, s, e, n]) => lon >= w && lon <= e && lat >= s && 
 function filterLines(lines, source) {
   let removed = 0;
   const kept = lines.filter((line) => {
-    const rule = edits.removeInBox.find((r) => line.every((pt) => inBox(pt, r.bbox)));
+    const rule = edits.removeInBox.find((r) => {
+      const insideCount = line.filter((pt) => inBox(pt, r.bbox)).length;
+      const cover = insideCount / line.length;
+      return cover >= (r.coverRatio ?? 1.0);
+    });
     if (!rule) return true;
     // Only long artificial-looking runs: harbor fragments (<0.1° span) stay.
     let x0 = Infinity;
@@ -28,7 +32,7 @@ function filterLines(lines, source) {
       if (lat < y0) y0 = lat;
       if (lat > y1) y1 = lat;
     }
-    if (Math.max(x1 - x0, y1 - y0) < (rule.minSpanDeg ?? 0.1)) return true;
+    if (!rule.dropAll && Math.max(x1 - x0, y1 - y0) < (rule.minSpanDeg ?? 0.1)) return true;
     removed++;
     return false;
   });

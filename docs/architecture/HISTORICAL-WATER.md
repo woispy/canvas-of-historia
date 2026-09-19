@@ -11,6 +11,13 @@ scenario declares its date, and `era-edits.json` lists corrections with
 cutoff dates. Application is a documented build step
 (`tools/gis/apply-era-edits.js`), verified by tests — never a silent hack.
 
+## Verified (2026-09-19)
+
+- Suez Canal line (117 pts, Port Said→Suez city) removed from z2/z1/HD.
+- Port Said + Suez port boxes: fully-inside fragments dropped (`dropAll`).
+- Remaining: shore-attached stub ends (continuity preserved deliberately).
+- Regression test: zero canal-like segments in all tiles + rule documented.
+
 ## Registry (1326)
 
 | Feature | Status in 1326 | Action |

@@ -6,7 +6,22 @@
       "id": "suez-canal",
       "reason": "Opened 1869; absent in 1326. OSM maps it as coastline (Port Said harbor works).",
       "cutoffDate": "1869-11-17",
+      "coverRatio": 0.8,
       "bbox": [32.24, 29.95, 32.42, 31.25]
+    },
+    {
+      "id": "port-said-harbor",
+      "reason": "Modern breakwaters/piers; absent in 1326. Small box, fragments only.",
+      "cutoffDate": "1869-11-17",
+      "dropAll": true,
+      "bbox": [32.26, 31.2, 32.38, 31.3]
+    },
+    {
+      "id": "suez-port",
+      "reason": "Modern port works at Suez city; absent in 1326.",
+      "cutoffDate": "1869-11-17",
+      "dropAll": true,
+      "bbox": [32.5, 29.9, 32.62, 30.05]
     }
   ],
   "backlog": [
