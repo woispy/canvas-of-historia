@@ -132,6 +132,16 @@ async function bootInner(el, opts = {}) {
     2: createTileStore(fetchTile, onTile, null, (key) => `/tiles/coast/${key}.json`),
   };
   let outline = null;
+  let worldLakes = null;
+  fetch('/data/lakes-world.json')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      worldLakes = data && Array.isArray(data.rings) ? data.rings : [];
+      scheduleDraw();
+    })
+    .catch(() => {
+      worldLakes = [];
+    });
   // Shown level freezes during gestures (hysteresis); settle recomputes.
   let shownLevel = levelFor(camera.scale);
   let gesturing = false;
@@ -171,7 +181,7 @@ async function bootInner(el, opts = {}) {
       }
       tiles.parentTiles = parent;
     }
-    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles, { gesturing, emaMs: frameEma, settled: !gesturing, parentTiles: tiles.parentTiles ?? [] });
+    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles, { gesturing, emaMs: frameEma, settled: !gesturing, parentTiles: tiles.parentTiles ?? [], lakes: worldLakes ?? [] });
     renderCanvas2D(ctx, width, height, cmds);
     const dt = performance.now() - t0;
     frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;

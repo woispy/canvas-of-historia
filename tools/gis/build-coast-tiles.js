@@ -47,6 +47,8 @@ const root = process.cwd();
 const shpPath = path.join(root, 'data/sources/osm/planet/shp/coastlines-split-4326/lines.shp');
 const outDir = path.join(root, 'public/tiles/coast');
 mkdirSync(outDir, { recursive: true });
+// Optional: TILE_FILTER="53_30,53_31" rebuilds only those tiles (restore jobs).
+const filter = process.env.TILE_FILTER ? new Set(process.env.TILE_FILTER.split(',')) : null;
 
 const tiles = new Map(); // "tx_ty" -> array of lines
 const q = (n) => Math.round(n * 10 ** QUANTIZE_DECIMALS) / 10 ** QUANTIZE_DECIMALS;
@@ -71,6 +73,7 @@ function emitLine(points) {
   for (let tx = x0; tx <= x1; tx++) {
     for (let ty = y0; ty <= y1; ty++) {
       const k = `${tx}_${ty}`;
+      if (filter && !filter.has(k)) continue;
       if (!tiles.has(k)) tiles.set(k, []);
       tiles.get(k).push(simple);
     }
@@ -130,6 +133,10 @@ async function build() {
     totalPts += pts;
     writeFileSync(path.join(outDir, `${k}.json`), JSON.stringify({ lines }));
     manifest[k] = { lines: lines.length, points: pts };
+  }
+  if (filter) {
+    console.log(`filtered rebuild: ${tiles.size} tiles rewritten (${totalLines} lines), manifest untouched.`);
+    return;
   }
   writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify({ tileDeg: TILE_DEG, tiles: manifest }));
   console.log(`tiles written: ${tiles.size}, lines=${totalLines}, points=${totalPts}`);

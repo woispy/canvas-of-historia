@@ -123,6 +123,14 @@ export function buildDisplayList(snapshot, camera, width, height, coastTiles = [
       at: project(camera, width, height, [m.lon, m.lat]),
     });
   }
+  // World lakes (Caspian included): thin strokes like coastlines, culled.
+  for (const ring of opts.lakes ?? []) {
+    if (!bboxVisible(worldBbox(ring, camera.center[0]), camera, width, height)) continue;
+    commands.push({
+      type: 'lake',
+      points: ring.map((pt) => project(camera, width, height, pt)),
+    });
+  }
   commands.push({ type: 'edge-fade', featherPx: Math.max(24, Math.min(160, 0.6 * pxPerDeg)) });
   return commands;
 }

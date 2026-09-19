@@ -213,4 +213,24 @@ describe('1326 seed contracts', () => {
     assert.equal(bursa.ownerStateId, 'ottomans');
     assert.equal(bursa.controllerStateId, 'ottomans');
   });
+  it('world lakes exist with Caspian, render as strokes', () => {
+    const lakesWorld = load('public/data/lakes-world.json');
+    assert.ok(lakesWorld.rings.length >= 500, `lakes expected, got ${lakesWorld.rings.length}`);
+    const caspian = lakesWorld.rings.filter((r) => r.some(([x, y]) => x > 48 && x < 55 && y > 38 && y < 44));
+    assert.ok(caspian.length >= 1, 'Caspian present at every zoom');
+  });
+  it('Suez canal erased for 1326 (era rule)', () => {
+    const tile = load('public/tiles/coast/53_30.json');
+    for (const line of tile.lines) {
+      for (let i = 1; i < line.length; i++) {
+        const [x0, y0] = line[i - 1];
+        const [x1, y1] = line[i];
+        const inBox = x0 > 32.0 && x0 < 32.8 && y0 > 29.5 && y0 < 31.5;
+        assert.ok(!(inBox && Math.abs(y1 - y0) > 0.15 && Math.abs(x1 - x0) < 0.03), 'no canal cut');
+      }
+    }
+    const edits = load('data/scenarios/1326/era-edits.json');
+    assert.ok(edits.removeInBox.some((r) => r.id === 'suez-canal'), 'rule documented');
+    assert.ok(edits.backlog.length >= 3, 'future corrections queued');
+  });
 });

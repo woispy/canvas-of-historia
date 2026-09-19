@@ -172,12 +172,13 @@ export function renderCanvas2D(ctx, width, height, commands) {
         // RETIRED (clean-slate reset).
         break;
       }
-      case 'land-fill-osm': {
-        // RETIRED (clean-slate reset): OSM theater overlay returns with HD detail.
-        break;
-      }
-      case 'land-fill-country': {
-        // RETIRED (clean-slate reset).
+      case 'lake': {
+        // World lake outlines (Caspian included): same black line language.
+        ctx.strokeStyle = S.coastline.color;
+        ctx.lineWidth = S.coastline.width;
+        ctx.lineJoin = 'round';
+        tracePath(ctx, cmd.points);
+        ctx.stroke();
         break;
       }
       case 'terrain-tint': {
@@ -244,8 +245,7 @@ export function renderCanvas2D(ctx, width, height, commands) {
         break;
       }
       case 'marker': {
-        ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.save();        ctx.shadowColor = 'rgba(0,0,0,0.6)';
         ctx.shadowBlur = 6;
         ctx.fillStyle = cmd.tier === 'capital' ? S.marker.capital : S.marker.city;
         ctx.beginPath();

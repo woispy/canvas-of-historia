@@ -1,0 +1,18 @@
+{
+  "scenarioId": "1326",
+  "note": "Era corrections: modern features erased for the scenario date. Each entry documents what, why, and the cutoff date. Applied by tools/gis/apply-era-edits.js to tile + HD coastline data.",
+  "removeInBox": [
+    {
+      "id": "suez-canal",
+      "reason": "Opened 1869; absent in 1326. OSM maps it as coastline (Port Said harbor works).",
+      "cutoffDate": "1869-11-17",
+      "bbox": [32.24, 29.95, 32.42, 31.25]
+    }
+  ],
+  "backlog": [
+    { "id": "don-volga-canal", "reason": "Opened 1952; absent in 1326.", "cutoffDate": "1952-07-27" },
+    { "id": "panama-canal", "reason": "Opened 1914; absent in all pre-1900 scenarios.", "cutoffDate": "1914-08-15" },
+    { "id": "zuiderzee", "reason": "Closed 1932 (Afsluitdijk); open water in 1326. Needs ADD, not remove.", "cutoffDate": "1932-05-28" },
+    { "id": "aral-sea", "reason": "Full extent in 1326; modern shrinkage must not apply.", "cutoffDate": null }
+  ]
+}

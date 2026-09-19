@@ -71,8 +71,7 @@ describe('rendering contract (S2)', () => {
     assert.ok(!farKinds.includes('coastline-batch'), 'no strokes without loaded tiles');
     assert.ok(farKinds.includes('edge-fade'), 'fade still applies');
   });
-  it('parent underlay merges, fresh tiles fade individually', async () => {
-    const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
+  it('parent underlay merges, fresh tiles fade individually', async () => {    const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
     const parent = [{ key: 'p', lines: [[[29, 40], [30, 41]]] }];
     const child = [{ key: 'c', lines: [[[29, 40], [30, 41]]], arrivedAt: 900 }];
@@ -84,6 +83,17 @@ describe('rendering contract (S2)', () => {
     assert.ok(fresh.alpha > 0 && fresh.alpha < 1, `mid-fade alpha, got ${fresh.alpha}`);
     const settled = buildDisplayList(snap, createCamera({ scale: 800 }), W, H, { child: [{ key: 'c', lines: [[[29, 40], [30, 41]]], arrivedAt: 100 }], parent: [] }, { nowMs: 1000 });
     assert.ok(!settled.some((c) => c.type === 'coastline-fresh'), 'old tiles merge silently');
+  });
+  it('lake rings draw culled black strokes', async () => {
+    const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
+    const snap = extractSnapshot(session);
+    const lakes = [[[29, 40], [30, 40], [30, 41], [29, 40]]];
+    const cmds = buildDisplayList(snap, createCamera({ scale: 800 }), W, H, [], { lakes });
+    const lake = cmds.filter((c) => c.type === 'lake');
+    assert.equal(lake.length, 1, 'one lake command');
+    assert.ok(lake[0].points.length >= 2, 'projected');
+    const far = buildDisplayList(snap, createCamera({ center: [-150, 0], scale: 60 }), W, H, [], { lakes });
+    assert.ok(!far.some((c) => c.type === 'lake'), 'distant lakes culled');
   });
   it('smoothing preserves endpoints and softens corners', () => {
     const jagged = [[0, 0], [10, 0], [10, 10], [20, 10]];
