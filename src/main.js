@@ -102,6 +102,8 @@ async function bootInner(el, opts = {}) {
   let panDy = 0;
   let frameEma = 0;
   let lastPts = 0;
+  const perfOn = typeof location !== 'undefined' && location.search.includes('perf=1');
+  const perfEl = perfOn ? (() => { const d = document.createElement('div'); d.id = 'perf'; document.body.appendChild(d); return d; })() : null;
 
   let lastFetchError = '';
   const store = createTileStore(
@@ -227,9 +229,6 @@ async function bootInner(el, opts = {}) {
   let drag = null;
   let suppressClick = false;
   let pendingTiles = false;
-  // Perf overlay (?perf=1): EMA frame ms + projected points + cached tiles.
-  const perfOn = typeof location !== 'undefined' && location.search.includes('perf=1');
-  const perfEl = perfOn ? (() => { const d = document.createElement('div'); d.id = 'perf'; document.body.appendChild(d); return d; })() : null;
   canvas.addEventListener('pointerdown', (event) => {
     drag = { x: event.clientX, y: event.clientY, moved: false };
     canvas.setPointerCapture(event.pointerId);
