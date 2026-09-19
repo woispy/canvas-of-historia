@@ -150,12 +150,11 @@ export function createDrawThrottle(minMs, nowFn, scheduleFn) {
 }
 // Pure: tile lines + camera → projected screen polylines.
 // Tiles may carry precomputed bboxes (from the store); otherwise computed.
-// Adaptive stride by zoom, gesture, AND measured cost. The governor closes
-// the loop: slow frames automatically buy speed with stride, fast frames buy
-// detail back. Pure and unit-tested.
-export function strideForScale(scale, gesturing = false, emaMs = 0) {
+// Adaptive stride by zoom + measured cost. ONE geometry everywhere: no
+// gesture-vs-release stride change, so transitions never pop. The governor
+// alone protects slow machines. Pure and unit-tested.
+export function strideForScale(scale, emaMs = 0) {
   let s = scale < 30 ? 4 : scale < 100 ? 2 : 1;
-  if (gesturing) s *= 2;
   if (emaMs > 40) s *= 2;
   if (emaMs > 80) s *= 2;
   return Math.min(s, 32);

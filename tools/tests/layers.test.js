@@ -107,20 +107,16 @@ describe('layer architecture (ADR-010)', () => {
     assert.equal(cut.length, 1);
     assert.ok(Math.abs(cut[0][0][0] - -2) < 0.01 && Math.abs(cut[0][1][0] - 50) < 0.01);
   });
-  it('gesture stride doubles, release restores full detail', () => {
-    assert.equal(strideForScale(800, false), 1);
-    assert.equal(strideForScale(800, true), 2);
-    assert.equal(strideForScale(50, false), 2);
-    assert.equal(strideForScale(50, true), 4);
-    assert.equal(strideForScale(10, false), 4);
-    assert.equal(strideForScale(10, true), 8);
+  it('stride depends on zoom + cost only (no gesture pop)', () => {
+    assert.equal(strideForScale(800), 1);
+    assert.equal(strideForScale(50), 2);
+    assert.equal(strideForScale(10), 4);
   });
   it('cost governor buys speed on slow frames, capped', () => {
-    assert.equal(strideForScale(800, false, 50), 2);
-    assert.equal(strideForScale(800, false, 100), 4);
-    assert.equal(strideForScale(800, true, 100), 8);
-    assert.equal(strideForScale(10, true, 200), 32);
-    assert.equal(strideForScale(10, true, 0), 8);
+    assert.equal(strideForScale(800, 50), 2);
+    assert.equal(strideForScale(800, 100), 4);
+    assert.equal(strideForScale(10, 200), 16);
+    assert.equal(strideForScale(10, 0), 4);
   });
   it('draw throttle fires at most once per window, trailing wins', () => {
     let now = 0;

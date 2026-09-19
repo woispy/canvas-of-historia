@@ -171,7 +171,7 @@ async function bootInner(el, opts = {}) {
       }
       tiles.parentTiles = parent;
     }
-    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles, { gesturing, emaMs: frameEma, parentTiles: tiles.parentTiles ?? [] });
+    const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles, { gesturing, emaMs: frameEma, settled: !gesturing, parentTiles: tiles.parentTiles ?? [] });
     renderCanvas2D(ctx, width, height, cmds);
     const dt = performance.now() - t0;
     frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;

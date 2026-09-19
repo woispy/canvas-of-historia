@@ -44,8 +44,8 @@ Planet coast (2026-09-19, green 61/61): ADR-009 — OSM planet tiles (~100m,
 1246 tiles, strokes only, no fills). Next: verify paint, then gated layers.
 Layers+perf (2026-09-19, green 65/65 → 75/75): ADR-010/011/012 — isolated
 layer, batched strokes, rAF, lazy JSON (entry 25KB); manifest gate, pyramid,
-eviction fix; honest interaction + governor; smooth LOD (hysteresis +
-placeholder + fresh fade, no ghosts).
+eviction fix; single-geometry interaction (no gesture stride, settled fade),
+denser z0/z1.
 
 ## Done
 

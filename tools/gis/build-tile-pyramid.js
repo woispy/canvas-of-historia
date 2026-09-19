@@ -9,8 +9,8 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 const Z1_DEG = 8;
-const Z1_EPS = 0.003;
-const Z0_EPS = 0.03;
+const Z1_EPS = 0.0015;
+const Z0_EPS = 0.015;
 
 function perpDist([px, py], [ax, ay], [bx, by]) {
   const dx = bx - ax;
@@ -86,6 +86,8 @@ writeFileSync(path.join(z1dir, 'manifest.json'), JSON.stringify({ tileDeg: Z1_DE
 console.log(`z1: ${z1.size} tiles from ${z2files} z2 files.`);
 
 // z0 world outline from NE global coastline (single file, far zoom).
+// Deliberately NE, not OSM: at far zoom NE-vs-OSM deltas are sub-pixel, and
+// OSM at any honest tolerance is megabytes (measured: 34MB @0.015°).
 const coast = JSON.parse(readFileSync(path.join(root, 'data/scenarios/1326/coastline.json'), 'utf8'));
 const q = (n) => Math.round(n * 1000) / 1000;
 const lines0 = [];

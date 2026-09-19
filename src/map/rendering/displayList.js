@@ -75,9 +75,9 @@ export function buildDisplayList(snapshot, camera, width, height, coastTiles = [
   const commands = [{ type: 'sea' }];
   const refLat = ((camera.refLat ?? camera.center[1]) * Math.PI) / 180;
   const pxPerDeg = camera.scale * Math.cos(refLat);
-  // Progressive refinement + cost governor: light stride while gesturing,
-  // full on release; slow frames automatically buy speed with stride.
-  const stride = strideForScale(camera.scale, opts.gesturing === true, opts.emaMs ?? 0);
+  // Single geometry always: stride depends on zoom + cost only, never on
+  // gesture state (that pop is gone for good).
+  const stride = strideForScale(camera.scale, opts.emaMs ?? 0);
   // Parent underlay (opaque, stale level): never an empty hole. Fresh child
   // tiles fade in individually; settled tiles merge into one batch.
   // Array input = legacy child-only (tests); object form carries parents.
@@ -85,6 +85,9 @@ export function buildDisplayList(snapshot, camera, width, height, coastTiles = [
   const parent = Array.isArray(coastTiles) ? [] : (coastTiles.parent ?? opts.parentTiles ?? []);
   const nowMs = opts.nowMs ?? Date.now();
   const freshMs = 250;
+  // Fresh-tile fade ONLY when settled: during gestures new tiles pop in
+  // instantly (motion hides it); the dissolve plays on release.
+  const settled = opts.settled !== false;
   const batches = [];
   for (const tile of parent) {
     for (const line of buildCoastLines([tile], camera, width, height, stride)) {
@@ -94,7 +97,7 @@ export function buildDisplayList(snapshot, camera, width, height, coastTiles = [
   const freshCmds = [];
   for (const tile of child) {
     const lines = buildCoastLines([tile], camera, width, height, stride);
-    const fresh = tile.arrivedAt !== undefined && nowMs - tile.arrivedAt < freshMs;
+    const fresh = settled && tile.arrivedAt !== undefined && nowMs - tile.arrivedAt < freshMs;
     for (const line of lines) {
       if (fresh) freshCmds.push({ tile: tile.key, line });
       else batches.push(line.points);
