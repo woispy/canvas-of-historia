@@ -6,3 +6,5 @@ dist/
 # Raw source datasets (reproducible via pinned fetch scripts, never committed)
 data/sources/
 dev-server.log
+# Generated tile store (rebuilt via npm run gis:coast-tiles)
+public/tiles/

@@ -40,6 +40,8 @@ Rebuild (2026-09-19, green 58/58): ADR-007 — country fills (10 countries,
 54 polys) + explicit seas painted first + fixed pass order.
 Clean slate (2026-09-19, green 57/57): ADR-008 — single-source chain
 (sea→land→wash→coastline→borders→markers→fade). Layers return one by one.
+Planet coast (2026-09-19, green 61/61): ADR-009 — OSM planet tiles (~100m,
+1246 tiles, strokes only, no fills). Next: verify paint, then gated layers.
 
 ## Done
 

@@ -35,23 +35,22 @@ describe('rendering contract (S2)', () => {
     assert.equal(snap.markers.length, 6);
   });
 
-  it('clean chain order: sea → land → wash → coastline → borders → markers → fade', async () => {
+  it('clean chain order: sea → coastline → markers → fade', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
-    const cmds = buildDisplayList(snap, createCamera({ scale: 100 }), W, H);
+    const cmds = buildDisplayList(snap, createCamera({ scale: 100 }), W, H, [
+      { key: 't', lines: [[[29, 40], [30, 41]]] },
+    ]);
     const kinds = cmds.map((c) => c.type);
     assert.equal(cmds[0].type, 'sea');
-    const land = kinds.indexOf('land-fill');
-    const fill = kinds.indexOf('province-fill');
-    const crisp = kinds.indexOf('coastline');
-    const border = kinds.indexOf('province-border');
+    const coast = kinds.indexOf('coastline');
     const marker = kinds.indexOf('marker');
     const fade = kinds.indexOf('edge-fade');
-    assert.ok([land, fill, crisp, border, marker, fade].every((i) => i !== -1), 'all stages present');
-    assert.ok(land < fill && fill < crisp && crisp < border && border < marker && marker < fade, 'fixed order');
+    assert.ok(coast !== -1 && marker !== -1 && fade !== -1, 'all stages present');
+    assert.ok(coast < marker && marker < fade, 'fixed order');
     assert.equal(fade, kinds.length - 1, 'fade is the final command');
-    for (const retired of ['coast-bands', 'coast-carve', 'coast-shore', 'waterway', 'sea-fill', 'terrain-tint', 'lake-fill', 'river', 'land-fill-osm', 'land-fill-country']) {
-      assert.ok(!kinds.includes(retired), `retired layer absent: ${retired}`);
+    for (const retired of ['land-fill', 'province-fill', 'province-border', 'coast-bands', 'coast-carve', 'coast-shore', 'waterway', 'sea-fill', 'terrain-tint', 'lake-fill', 'river', 'land-fill-osm', 'land-fill-country']) {
+      assert.ok(!kinds.includes(retired), `retired absent: ${retired}`);
     }
   });
 
@@ -63,13 +62,14 @@ describe('rendering contract (S2)', () => {
     assert.ok(fadeAt(800) > fadeAt(100), 'feather scales with zoom');
   });
 
-  it('Pacific view draws global base, culls theater detail', async () => {
+  it('Pacific view draws sea, no theater strokes without tiles', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
-    const far = buildDisplayList(snap, createCamera({ center: [-150, 0], scale: 60 }), W, H);
+    const far = buildDisplayList(snap, createCamera({ center: [-150, 0], scale: 60 }), W, H, []);
     const farKinds = far.map((c) => c.type);
-    assert.ok(farKinds.includes('land-fill'), 'global base still draws');
-    assert.ok(farKinds.includes('coastline'), 'global coastline still draws');
+    assert.equal(far[0].type, 'sea');
+    assert.ok(!farKinds.includes('coastline'), 'no strokes without loaded tiles');
+    assert.ok(farKinds.includes('edge-fade'), 'fade still applies');
   });
   it('smoothing preserves endpoints and softens corners', () => {
     const jagged = [[0, 0], [10, 0], [10, 10], [20, 10]];
@@ -83,21 +83,15 @@ describe('rendering contract (S2)', () => {
       'each Chaikin pass softens corners',
     );
   });
-  it('display list covers sea, coastline, fills, borders, markers', async () => {
+  it('display list covers sea, coastline, markers', async () => {
     const session = await enterGame(fsReader, { scenarioId: '1326', countryId: 'ottomans' });
     const snap = extractSnapshot(session);
-    const cmds = buildDisplayList(snap, createCamera({ scale: 100 }), W, H);
+    const cmds = buildDisplayList(snap, createCamera({ scale: 100 }), W, H, [
+      { key: 't', lines: [[[29, 40], [30, 41]]] },
+    ]);
     const kinds = cmds.map((c) => c.type);
     assert.equal(cmds[0].type, 'sea');
-    assert.ok(kinds.filter((k) => k === 'land-fill').length >= 1, 'landmass rendered');
-    assert.ok(kinds.filter((k) => k === 'coastline').length >= 1, 'single-source coastline present');
-    assert.equal(kinds.filter((k) => k === 'province-fill').length, 6);
-    const fills = cmds.filter((c) => c.type === 'province-fill');
-    assert.ok(
-      fills.every((c) => Array.isArray(c.landClip) && c.landClip.length > 0),
-      'political washes carry the land clip (never enter the sea)',
-    );
-    assert.equal(kinds.filter((k) => k === 'province-border').length, 6);
+    assert.ok(kinds.filter((k) => k === 'coastline').length >= 1, 'tile coastline present');
     assert.equal(kinds.filter((k) => k === 'marker').length, 6);
     const finite = (pt) => Number.isFinite(pt[0]) && Number.isFinite(pt[1]);
     for (const c of cmds) {

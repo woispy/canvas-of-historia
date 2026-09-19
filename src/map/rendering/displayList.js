@@ -69,42 +69,21 @@ const visibleRings = (rings, camera, width, height) =>
     height,
   );
 
-export function buildDisplayList(snapshot, camera, width, height) {
+export function buildDisplayList(snapshot, camera, width, height, coastTiles = []) {
   const commands = [{ type: 'sea' }];
   const refLat = ((camera.refLat ?? camera.center[1]) * Math.PI) / 180;
   const pxPerDeg = camera.scale * Math.cos(refLat);
-  // Land fills first (global, culled). Fill and stroke share the same rings.
-  const landScreen = [];
-  for (const poly of snapshot.land ?? []) {
-    if (!visibleRings(poly.rings, camera, width, height)) continue;
-    const rings = poly.rings.map((ring) => projectRing(camera, width, height, ring));
-    landScreen.push(...rings);
-    commands.push({ type: 'land-fill', id: poly.id, rings });
-  }
-  // Political washes, clipped to land: never enter the sea.
-  for (const p of snapshot.provinces) {
-    commands.push({
-      type: 'province-fill',
-      id: p.id,
-      color: p.color,
-      ring: projectRing(camera, width, height, p.ring),
-      landClip: landScreen,
-    });
-  }
-  // ONE coastline, from the same rings as the fill. Plain black, smoothed.
-  for (const poly of snapshot.land ?? []) {
-    for (const ring of poly.rings) {
-      const pts = ring.map((pt) => project(camera, width, height, pt));
-      if (!bboxVisible(worldBbox(ring, camera.center[0]), camera, width, height)) continue;
+  // Coastlines-only step: NO land fills, NO washes, NO borders.
+  // Tile strokes from the planet store (same black line everywhere).
+  for (const tile of coastTiles) {
+    for (const line of tile.lines ?? []) {
+      if (!visiblePoints(line, camera, width, height)) continue;
       commands.push({
         type: 'coastline',
-        id: poly.id,
-        points: smoothPolyline(smoothPolyline(pts)),
+        id: tile.key,
+        points: line.map((pt) => project(camera, width, height, pt)),
       });
     }
-  }
-  for (const p of snapshot.provinces) {
-    commands.push({ type: 'province-border', id: p.id, ring: projectRing(camera, width, height, p.ring) });
   }
   for (const m of snapshot.markers) {
     commands.push({

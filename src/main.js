@@ -20,6 +20,8 @@ import seas from '../data/scenarios/1326/seas.json';
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
+import { tileRangeForView } from './map/tiles.js';
+import { unproject } from './map/selection/pick.js';
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
@@ -69,8 +71,43 @@ export async function boot(rootElement, opts = {}) {
   // Camera fits the scenario bounds, so the full theater is centered on boot.
   let camera = fitCamera(session.scenario.mapScope.bounds, width, height);
   const snapshot = extractSnapshot(session);
+  // Planet tile store: fetch visible 4° tiles on demand, LRU-capped.
+  const tileCache = new Map();
+  const TILE_CACHE_MAX = 96;
+  const visibleTileLines = () => {
+    const corners = [
+      [0, 0],
+      [width, 0],
+      [0, height],
+      [width, height],
+    ].map(([x, y]) => unproject(camera, width, height, [x, y]));
+    const lons = corners.map(([lo]) => lo);
+    const lats = corners.map(([, la]) => la);
+    const keys = tileRangeForView(Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats));
+    const out = [];
+    for (const key of keys) {
+      const hit = tileCache.get(key);
+      if (hit?.lines) {
+        out.push({ key, lines: hit.lines });
+      } else if (!hit) {
+        tileCache.set(key, { pending: true });
+        if (tileCache.size > TILE_CACHE_MAX) {
+          const first = tileCache.keys().next().value;
+          tileCache.delete(first);
+        }
+        fetch(`/tiles/coast/${key}.json`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            tileCache.set(key, data && Array.isArray(data.lines) ? { lines: data.lines } : { lines: [] });
+            draw(current);
+          })
+          .catch(() => tileCache.set(key, { lines: [] }));
+      }
+    }
+    return out;
+  };
   const draw = (s) =>
-    renderCanvas2D(ctx, width, height, buildDisplayList(extractSnapshot(s), camera, width, height));
+    renderCanvas2D(ctx, width, height, buildDisplayList(extractSnapshot(s), camera, width, height, visibleTileLines()));
   draw(session);
   let current = session;
   const panel = document.getElementById('panel');

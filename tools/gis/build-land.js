@@ -16,7 +16,7 @@ const MIN_RING_POINTS = 4;
 // RDP in METERS, not degrees: near the poles a degree of longitude collapses
 // to ~0m, and degree-space RDP "straightens" the pole traverse into a 360°
 // streak across the map. cos(latitude) weighting keeps it honest everywhere.
-const SIMPLIFY_EPSILON_M = 5000;
+const SIMPLIFY_EPSILON_M = 500;
 
 function perpDistM([px, py], [ax, ay], [bx, by]) {
   const latRef = (((ay + by) / 2) * Math.PI) / 180;
