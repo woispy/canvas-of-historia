@@ -28,7 +28,7 @@ export function validateScenario(def) {
   };
 
   if (!def || typeof def !== 'object') throw new ScenarioError('validate', ['empty definition']);
-  const { scenario, provinces, cities, coastline, coastlineHd, land, landOsm, rivers, lakes, terrain, waterways } = def;
+  const { scenario, provinces, cities, coastline, coastlineHd, land, landOsm, landCountries, rivers, lakes, terrain, waterways, seas } = def;
   need(scenario && typeof scenario === 'object', 'scenario: missing object');
   need(Array.isArray(provinces) && provinces.length > 0, 'provinces: non-empty array required');
   need(Array.isArray(cities), 'cities: array required');
@@ -170,6 +170,37 @@ export function validateScenario(def) {
         w.points.length >= 2 &&
         w.points.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
       `waterway ${w.id}: points must be [lon, lat] pairs`,
+    );
+  }
+  for (const s of seas ?? []) {
+    need(isId(s.id), `sea.id invalid: ${s.id}`);
+    need(s.scenarioId === scenario.id, `sea ${s.id}: scenario mismatch`);
+    need(
+      Array.isArray(s.rings) &&
+        s.rings.length >= 1 &&
+        s.rings.every(
+          (ring) =>
+            Array.isArray(ring) &&
+            ring.length >= 4 &&
+            ring.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
+        ),
+      `sea ${s.id}: rings must be closed [lon, lat] loops`,
+    );
+  }
+  // Theater country fills share the land polygon shape (may be partial).
+  for (const poly of landCountries ?? []) {
+    need(isId(poly.id), `landCountries.id invalid: ${poly.id}`);
+    need(poly.scenarioId === scenario.id, `landCountries ${poly.id}: scenario mismatch`);
+    need(
+      Array.isArray(poly.rings) &&
+        poly.rings.length >= 1 &&
+        poly.rings.every(
+          (ring) =>
+            Array.isArray(ring) &&
+            ring.length >= 4 &&
+            ring.every((pt) => Array.isArray(pt) && typeof pt[0] === 'number' && typeof pt[1] === 'number'),
+        ),
+      `landCountries ${poly.id}: rings must be closed [lon, lat] loops`,
     );
   }
   for (const c of cities) {

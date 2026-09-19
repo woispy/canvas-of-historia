@@ -17,6 +17,9 @@
     "gis:fetch-dem": "node tools/gis/fetch-dem.js",
     "gis:build-terrain": "node tools/gis/build-terrain.js",
     "gis:terrain": "npm run gis:fetch-dem && npm run gis:build-terrain",
+    "gis:fetch-admin": "node tools/gis/fetch-ne-admin.js",
+    "gis:build-theater": "node tools/gis/build-theater-land.js",
+    "gis:theater": "npm run gis:fetch-admin && npm run gis:build-theater",
     "gis:fetch-osm-coast": "node tools/gis/fetch-osm-coast.js",
     "gis:build-hd-coast": "node tools/gis/build-hd-coast.js",
     "gis:hd-coast": "npm run gis:fetch-osm-coast && npm run gis:build-hd-coast"

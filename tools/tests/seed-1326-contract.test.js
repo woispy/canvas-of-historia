@@ -22,7 +22,9 @@ const land = load('data/scenarios/1326/land.json');
 const rivers = load('data/scenarios/1326/rivers.json');
 const lakes = load('data/scenarios/1326/lakes.json');
 const landOsm = load('data/scenarios/1326/land-osm.json');
+const landCountries = load('data/scenarios/1326/land-countries.json');
 const waterways = load('data/scenarios/1326/waterways.json');
+const seas = load('data/scenarios/1326/seas.json');
 const terrain = load('data/scenarios/1326/terrain-grid.json');
 
 function check(schema, data, label) {
@@ -71,6 +73,12 @@ describe('1326 seed contracts', () => {
     assert.ok(covers([32.86, 39.93]), 'Ankara is land');
     assert.ok(!covers([-150, 0]), 'mid-Pacific is sea');
   });
+  it('theater countries cover Turkey with clipped rings', () => {
+    const landSchema = load('docs/contracts/land.schema.json');
+    assert.ok(landCountries.length >= 10, `countries expected, got ${landCountries.length}`);
+    assert.ok(landCountries.some((p) => p.country === 'Turkey'), 'Turkey present');
+    for (const poly of landCountries.slice(0, 20)) check(landSchema, poly, `cty ${poly.id}`);
+  });
   it('verified OSM overlay holds no sea, covers Buyukada', () => {
     const landSchema = load('docs/contracts/land.schema.json');
     const inRing = ([lon, lat], ring) => {
@@ -99,6 +107,23 @@ describe('1326 seed contracts', () => {
       waterways.map((w) => w.id).sort(),
       ['bosphorus', 'dardanelles'],
     );
+  });
+  it('seas enclose open water (explicit overlays)', () => {
+    const inRing = ([lon, lat], ring) => {
+      let ins = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i];
+        const [xj, yj] = ring[j];
+        if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) ins = !ins;
+      }
+      return ins;
+    };
+    assert.equal(seas.length, 3);
+    const centers = { marmara: [28.9, 40.62], bosphorus: [29.02, 41.08], dardanelles: [26.45, 40.2] };
+    for (const s of seas) {
+      assert.ok(Array.isArray(s.rings) && s.rings.length >= 1, `sea ${s.id} shaped`);
+      assert.ok(inRing(centers[s.id], s.rings[0]), `sea ${s.id} covers open water`);
+    }
   });
   it('terrain grid matches schema with sane dimensions and range', () => {
     const terrainSchema = load('docs/contracts/terrain.schema.json');

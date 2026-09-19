@@ -101,6 +101,19 @@ export function renderCanvas2D(ctx, width, height, commands) {
         ctx.fillRect(0, 0, width, height);
         break;
       }
+      case 'sea-fill': {
+        // Explicit water (straits, enclosed seas): flat sea tone, no stroke —
+        // OSM crisp strokes drawn later define the exact edge.
+        ctx.fillStyle = S.sea.shallow;
+        ctx.beginPath();
+        for (const ring of cmd.rings) {
+          ctx.moveTo(ring[0][0], ring[0][1]);
+          for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
+          ctx.closePath();
+        }
+        ctx.fill('evenodd');
+        break;
+      }
       case 'coast-bands': {
         // Painted before land: the fill covers the land-side half, so the
         // shallow effect survives only seaward. Widths arrive in px,
@@ -167,6 +180,18 @@ export function renderCanvas2D(ctx, width, height, commands) {
       }
       case 'land-fill-osm': {
         // Verified-theater overdraw, identical style to base: seamless.
+        ctx.fillStyle = S.land.base;
+        ctx.beginPath();
+        for (const ring of cmd.rings) {
+          ctx.moveTo(ring[0][0], ring[0][1]);
+          for (let i = 1; i < ring.length; i++) ctx.lineTo(ring[i][0], ring[i][1]);
+          ctx.closePath();
+        }
+        ctx.fill('evenodd');
+        break;
+      }
+      case 'land-fill-country': {
+        // Theater country overdraw, identical style: seamless.
         ctx.fillStyle = S.land.base;
         ctx.beginPath();
         for (const ring of cmd.rings) {

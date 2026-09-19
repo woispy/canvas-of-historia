@@ -87,6 +87,9 @@ describe('rendering contract (S2)', () => {
     const snap = extractSnapshot(session);
     const kinds = buildDisplayList(snap, createCamera({ scale: 800 }), W, H).map((c) => c.type);
     assert.ok(kinds.filter((k) => k === 'land-fill-osm').length >= 1, 'OSM overdraw present');
+    assert.ok(kinds.filter((k) => k === 'land-fill-country').length >= 1, 'country fills present');
+    assert.ok(kinds.indexOf('sea-fill') !== -1, 'explicit seas rendered');
+    assert.ok(kinds.indexOf('sea-fill') < kinds.indexOf('land-fill'), 'seas under land fills');
     assert.ok(kinds.indexOf('waterway') !== -1, 'waterways rendered');
     assert.ok(kinds.indexOf('waterway') > kinds.indexOf('province-fill'), 'waterway after fills');
     assert.ok(kinds.indexOf('waterway') < kinds.indexOf('coastline'), 'waterway under crisp stroke');

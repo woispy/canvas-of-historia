@@ -78,6 +78,16 @@ const visibleRings = (rings, camera, width, height) =>
 
 export function buildDisplayList(snapshot, camera, width, height) {
   const commands = [{ type: 'sea' }];
+  // Explicit water overlays FIRST (open-water cores): land fills drawn later
+  // cover any overlap, so these can be generous without risk.
+  for (const s of snapshot.seas ?? []) {
+    if (!visibleRings(s.rings, camera, width, height)) continue;
+    commands.push({
+      type: 'sea-fill',
+      id: s.id,
+      rings: s.rings.map((ring) => projectRing(camera, width, height, ring)),
+    });
+  }
   const hd = camera.scale >= HD_MIN_SCALE && (snapshot.coastlineHd ?? []).length > 0;
   const coastSource = hd ? snapshot.coastlineHd : snapshot.coastline;
   const coastDetail = hd ? 'hd' : 'base';
@@ -115,6 +125,15 @@ export function buildDisplayList(snapshot, camera, width, height) {
     const rings = poly.rings.map((ring) => projectRing(camera, width, height, ring));
     osmScreen.push(...rings);
     commands.push({ type: 'land-fill-osm', id: poly.id, rings });
+  }
+  // Theater country fills: same style overdraw, exact where OSM verified.
+  for (const poly of snapshot.landCountries ?? []) {
+    if (!visibleRings(poly.rings, camera, width, height)) continue;
+    commands.push({
+      type: 'land-fill-country',
+      id: poly.id,
+      rings: poly.rings.map((ring) => projectRing(camera, width, height, ring)),
+    });
   }
   for (const lake of snapshot.lakes ?? []) {
     if (!visibleRings(lake.rings, camera, width, height)) continue;

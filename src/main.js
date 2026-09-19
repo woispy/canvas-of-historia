@@ -11,10 +11,12 @@ import coastline from '../data/scenarios/1326/coastline.json';
 import coastlineHd from '../data/scenarios/1326/coastline-hd.json';
 import land from '../data/scenarios/1326/land.json';
 import landOsm from '../data/scenarios/1326/land-osm.json';
+import landCountries from '../data/scenarios/1326/land-countries.json';
 import rivers from '../data/scenarios/1326/rivers.json';
 import lakes from '../data/scenarios/1326/lakes.json';
 import terrain from '../data/scenarios/1326/terrain-grid.json';
 import waterways from '../data/scenarios/1326/waterways.json';
+import seas from '../data/scenarios/1326/seas.json';
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
@@ -35,10 +37,12 @@ const seedReader = async (rel) => {
   if (rel.endsWith('coastline-hd.json')) return coastlineHd;
   if (rel.endsWith('land.json')) return land;
   if (rel.endsWith('land-osm.json')) return landOsm;
+  if (rel.endsWith('land-countries.json')) return landCountries;
   if (rel.endsWith('rivers.json')) return rivers;
   if (rel.endsWith('lakes.json')) return lakes;
   if (rel.endsWith('terrain-grid.json')) return terrain;
   if (rel.endsWith('waterways.json')) return waterways;
+  if (rel.endsWith('seas.json')) return seas;
   throw new Error(`unknown asset: ${rel}`);
 };
 

@@ -37,8 +37,19 @@ export function bootstrapWorld(def) {
       Object.freeze({ ...poly, rings: Object.freeze(poly.rings.map((ring) => freezePts(ring))) }),
     ),
   );
+  // Theater country fills (opaque, same style — seamless overdraw).
+  const landCountries = Object.freeze(
+    (def.landCountries ?? []).map((poly) =>
+      Object.freeze({ ...poly, rings: Object.freeze(poly.rings.map((ring) => freezePts(ring))) }),
+    ),
+  );
   const waterways = Object.freeze(
     (def.waterways ?? []).map((w) => Object.freeze({ ...w, points: freezePts(w.points) })),
   );
-  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, coastlineHd, land, landOsm, rivers, lakes, terrain, waterways });
+  const seas = Object.freeze(
+    (def.seas ?? []).map((s) =>
+      Object.freeze({ ...s, rings: Object.freeze(s.rings.map((ring) => freezePts(ring))) }),
+    ),
+  );
+  return Object.freeze({ scenarioId: def.scenario.id, states, anchors, provinces, cities, coastline, coastlineHd, land, landOsm, landCountries, rivers, lakes, terrain, waterways, seas });
 }

@@ -10,6 +10,7 @@
     "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
     "scenarioId": { "type": "string" },
     "source": { "type": "string" },
+    "country": { "type": "string" },
     "confidence": {
       "enum": ["VERY_HIGH", "HIGH", "MEDIUM", "LOW", "SPECULATIVE"]
     },

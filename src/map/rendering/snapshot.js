@@ -24,9 +24,11 @@ export function extractSnapshot(session) {
   });
   const land = (session.world.land ?? []).map((poly) => ({ id: poly.id, rings: poly.rings }));
   const landOsm = (session.world.landOsm ?? []).map((poly) => ({ id: poly.id, rings: poly.rings }));
+  const landCountries = (session.world.landCountries ?? []).map((poly) => ({ id: poly.id, country: poly.country, rings: poly.rings }));
   const waterways = (session.world.waterways ?? []).map((w) => ({ id: w.id, widthDeg: w.widthDeg, points: w.points }));
+  const seas = (session.world.seas ?? []).map((s) => ({ id: s.id, rings: s.rings }));
   const rivers = (session.world.rivers ?? []).map((r) => ({ id: r.id, points: r.points }));
   const lakes = (session.world.lakes ?? []).map((lake) => ({ id: lake.id, rings: lake.rings }));
   const terrain = session.world.terrain ?? null;
-  return Object.freeze({ provinces, coastline, coastlineHd, markers, land, landOsm, rivers, lakes, terrain, waterways });
+  return Object.freeze({ provinces, coastline, coastlineHd, markers, land, landOsm, landCountries, rivers, lakes, terrain, waterways, seas });
 }

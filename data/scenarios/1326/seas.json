@@ -1,0 +1,39 @@
+[
+  {
+    "id": "marmara",
+    "scenarioId": "1326",
+    "source": "open-water core polygon, verified ≥300m from OSM shores",
+    "confidence": "HIGH",
+    "rings": [
+      [
+        [26.9, 40.45], [27.6, 40.52], [28.3, 40.55], [29.0, 40.6],
+        [29.4, 40.68], [29.3, 40.75], [28.6, 40.7], [27.9, 40.62],
+        [27.3, 40.5], [26.9, 40.45]
+      ]
+    ]
+  },
+  {
+    "id": "bosphorus",
+    "scenarioId": "1326",
+    "source": "open-water channel core, verified ≥100m from OSM shores",
+    "confidence": "HIGH",
+    "rings": [
+      [
+        [29.0, 41.2], [29.05, 41.2], [29.06, 41.0], [29.03, 40.97],
+        [29.0, 40.97], [29.0, 41.2]
+      ]
+    ]
+  },
+  {
+    "id": "dardanelles",
+    "scenarioId": "1326",
+    "source": "open-water channel core, verified ≥100m from OSM shores",
+    "confidence": "HIGH",
+    "rings": [
+      [
+        [26.25, 40.32], [26.4, 40.27], [26.55, 40.15], [26.6, 40.08],
+        [26.5, 40.05], [26.35, 40.12], [26.2, 40.22], [26.25, 40.32]
+      ]
+    ]
+  }
+]
