@@ -6,17 +6,26 @@ import { TILE_DEG, tileRangeForView } from '../tiles.js';
 import { project } from '../camera/camera.js';
 import { unproject } from '../selection/pick.js';
 
-export const COAST_TILE_URL = (key) => `/tiles/coast/${key}.json`;
 export const TILE_CACHE_MAX = 96;
 export const MAX_FETCH_PER_PASS = 12;
-// Below this scale the far outline replaces tiles (no fetch storm at sea).
-export const FAR_SCALE = 60;
+// Pyramid levels: 0 = world outline, 1 = 8° tiles, 2 = 4° tiles.
+export const LEVEL_DEG = { 1: 8, 2: 4 };
 
-export function useOutline(scale) {
-  return scale < FAR_SCALE;
+export function levelFor(scale) {
+  if (scale < 25) return 0;
+  if (scale < 120) return 1;
+  return 2;
 }
 
-export function createTileStore(fetchJson, onChange, knownTiles = null) {
+export function coastTileUrl(level, key) {
+  return level === 1 ? `/tiles/coast1/${key}.json` : `/tiles/coast/${key}.json`;
+}
+
+export function useOutline(scale) {
+  return levelFor(scale) === 0;
+}
+
+export function createTileStore(fetchJson, onChange, knownTiles = null, urlFor = (key) => `/tiles/coast/${key}.json`) {
   const cache = new Map();
   const api = {
     get: (key) => cache.get(key),
@@ -39,7 +48,7 @@ export function createTileStore(fetchJson, onChange, knownTiles = null) {
         started++;
         cache.set(key, { pending: true });
         if (cache.size > TILE_CACHE_MAX) cache.delete(cache.keys().next().value);
-        fetchJson(COAST_TILE_URL(key))
+        fetchJson(urlFor(key))
           .then((data) => {
             // Drop results for entries evicted while in flight (cap holds).
             if (!cache.has(key)) return;
@@ -72,8 +81,8 @@ function lineBbox(line) {
   return [x0, y0, x1, y1];
 }
 
-// Viewport world bbox → visible tile keys.
-export function visibleTileKeys(camera, width, height) {
+// Viewport world bbox → visible tile keys at the given grid size.
+export function visibleTileKeys(camera, width, height, tileDeg = 4) {
   const corners = [
     [0, 0],
     [width, 0],
@@ -82,7 +91,7 @@ export function visibleTileKeys(camera, width, height) {
   ].map(([x, y]) => unproject(camera, width, height, [x, y]));
   const lons = corners.map(([lo]) => lo);
   const lats = corners.map(([, la]) => la);
-  return tileRangeForView(Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats));
+  return tileRangeForView(Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats), tileDeg);
 }
 
 // Pure: tile lines + camera → projected screen polylines.

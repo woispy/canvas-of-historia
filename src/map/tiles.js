@@ -1,4 +1,4 @@
-// Tile math for the planet coastline store (4° grid, WGS84).
+// Tile math for the planet coastline store (4°/8° grids, WGS84).
 // Pure helpers — headless-testable. Fetching lives in main.js (browser).
 
 export const TILE_DEG = 4;
@@ -7,12 +7,12 @@ export function tileKey(tx, ty) {
   return `${tx}_${ty}`;
 }
 
-export function tileOf(lon, lat) {
-  return [Math.floor((lon + 180) / TILE_DEG), Math.floor((lat + 90) / TILE_DEG)];
+export function tileOf(lon, lat, tileDeg = TILE_DEG) {
+  return [Math.floor((lon + 180) / tileDeg), Math.floor((lat + 90) / tileDeg)];
 }
 
-// Tile range covering a viewport, given its world-space bbox corners.
-export function tileRangeForView(west, south, east, north) {
+// Viewport range includes neighbors and wraps the antimeridian.
+export function tileRangeForView(west, south, east, north, tileDeg = TILE_DEG) {
   // Normalize antimeridian crossings for the range computation.
   let w = west;
   let e = east;
@@ -22,14 +22,16 @@ export function tileRangeForView(west, south, east, north) {
   } else if (e < w) {
     e += 360;
   }
-  const [tx0] = [Math.floor((w + 180) / TILE_DEG)];
-  const [tx1] = [Math.floor((e + 180) / TILE_DEG)];
-  const ty0 = Math.max(0, Math.floor((south + 90) / TILE_DEG));
-  const ty1 = Math.min(44, Math.floor((north + 90) / TILE_DEG));
+  const perRow = Math.round(360 / tileDeg);
+  const maxTy = Math.round(180 / tileDeg) - 1;
+  const [tx0] = [Math.floor((w + 180) / tileDeg)];
+  const [tx1] = [Math.floor((e + 180) / tileDeg)];
+  const ty0 = Math.max(0, Math.floor((south + 90) / tileDeg));
+  const ty1 = Math.min(maxTy, Math.floor((north + 90) / tileDeg));
   const keys = [];
   for (let tx = tx0; tx <= tx1; tx++) {
-    // Wrap tile x around the antimeridian (90 tiles span 360°).
-    const wrapped = ((tx % 90) + 90) % 90;
+    // Wrap tile x around the antimeridian.
+    const wrapped = ((tx % perRow) + perRow) % perRow;
     for (let ty = ty0; ty <= ty1; ty++) keys.push(tileKey(wrapped, ty));
   }
   return keys;

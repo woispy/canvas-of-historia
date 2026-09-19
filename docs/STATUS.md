@@ -42,10 +42,9 @@ Clean slate (2026-09-19, green 57/57): ADR-008 — single-source chain
 (sea→land→wash→coastline→borders→markers→fade). Layers return one by one.
 Planet coast (2026-09-19, green 61/61): ADR-009 — OSM planet tiles (~100m,
 1246 tiles, strokes only, no fills). Next: verify paint, then gated layers.
-Layers+perf (2026-09-19, green 65/65 → 67/67): ADR-010 — isolated coastline
-layer, batched strokes, rAF, pan-blit, adaptive stride, lazy JSON (entry
-25KB). Round 3: manifest gate, world-outline far LOD, eviction fix (crash
-cause), fetch cap, subpixel skip.
+Layers+perf (2026-09-19, green 65/65 → 68/68): ADR-010/011 — isolated layer,
+batched strokes, rAF, pan-blit, lazy JSON (entry 25KB); manifest gate, far
+outline LOD, eviction fix; full z0/z1/z2 pyramid by zoom.
 
 ## Done
 

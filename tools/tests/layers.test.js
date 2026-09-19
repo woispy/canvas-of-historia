@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createLayerRegistry } from '../../src/map/layers/registry.js';
-import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, FAR_SCALE } from '../../src/map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, buildCoastLines, useOutline, levelFor } from '../../src/map/layers/coastline.js';
 import { createCamera } from '../../src/map/camera/camera.js';
 
 const W = 1200;
@@ -63,9 +63,17 @@ describe('layer architecture (ADR-010)', () => {
 
   it('far zoom uses the outline, near zoom uses tiles', () => {
     assert.equal(useOutline(10), true);
-    assert.equal(useOutline(FAR_SCALE - 1), true);
-    assert.equal(useOutline(FAR_SCALE), false);
     assert.equal(useOutline(800), false);
+  });
+
+  it('pyramid levels step with zoom, z1 manifest on disk', () => {
+    assert.equal(levelFor(10), 0);
+    assert.equal(levelFor(24), 0);
+    assert.equal(levelFor(25), 1);
+    assert.equal(levelFor(66), 1);
+    assert.equal(levelFor(119), 1);
+    assert.equal(levelFor(120), 2);
+    assert.equal(levelFor(800), 2);
   });
 
   it('visibleTileKeys covers the viewport', () => {

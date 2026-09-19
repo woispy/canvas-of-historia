@@ -9,7 +9,7 @@
 import { enterGame } from './core/engine/boot.js';
 import { advanceMonth } from './core/engine/tick.js';
 import { fitCamera, panBy, zoomAt } from './map/camera/camera.js';
-import { createTileStore, visibleTileKeys, useOutline } from './map/layers/coastline.js';
+import { createTileStore, visibleTileKeys, useOutline, levelFor, LEVEL_DEG } from './map/layers/coastline.js';
 import { extractSnapshot } from './map/rendering/snapshot.js';
 import { buildDisplayList } from './map/rendering/displayList.js';
 import { renderCanvas2D } from './map/rendering/canvas2d/backend.js';
@@ -106,41 +106,47 @@ async function bootInner(el, opts = {}) {
   const perfEl = perfOn ? (() => { const d = document.createElement('div'); d.id = 'perf'; document.body.appendChild(d); return d; })() : null;
 
   let lastFetchError = '';
-  let knownTiles = null;
-  fetch('/tiles/coast/manifest.json')
-    .then((r) => (r.ok ? r.json() : null))
-    .then((m) => {
-      if (m?.tiles) {
-        knownTiles = new Set(Object.keys(m.tiles));
-        store.knownTiles = knownTiles;
-        scheduleFull();
-      }
-    })
-    .catch(() => {});
+  // Pyramid: z0 world outline, z1 8° tiles, z2 4° tiles. Manifests gate ocean.
+  const manifests = {};
+  for (const [level, url] of [[1, '/tiles/coast1/manifest.json'], [2, '/tiles/coast/manifest.json']]) {
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => {
+        if (m?.tiles) {
+          manifests[level] = new Set(Object.keys(m.tiles));
+          stores[level].knownTiles = manifests[level];
+          scheduleFull();
+        }
+      })
+      .catch(() => {});
+  }
+  const fetchTile = async (url) => {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (err) {
+      lastFetchError = `${url.split('/').pop()}: ${err?.message ?? err}`;
+      return null;
+    }
+  };
+  const onTile = () => {
+    // Tile arrivals never interrupt an active drag (deferred to release).
+    if (!drag) scheduleFull();
+    else pendingTiles = true;
+  };
+  const stores = {
+    1: createTileStore(fetchTile, onTile, null, (key) => `/tiles/coast1/${key}.json`),
+    2: createTileStore(fetchTile, onTile, null, (key) => `/tiles/coast/${key}.json`),
+  };
   let outline = null;
-  const store = createTileStore(
-    async (url) => {
-      try {
-        const r = await fetch(url);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return await r.json();
-      } catch (err) {
-        lastFetchError = `${url.split('/').pop()}: ${err?.message ?? err}`;
-        return null;
-      }
-    },
-    () => {
-      // Tile arrivals never interrupt an active drag (deferred to release).
-      if (!drag) scheduleFull();
-      else pendingTiles = true;
-    },
-  );
   const draw = (s) => {
     const t0 = performance.now();
-    // Far zoom: single world outline (no tile storm, ~50k pts max).
-    // Near zoom: planet tiles on demand.
+    // Pyramid level by zoom: 0 = world outline, 1 = 8° tiles, 2 = 4° tiles.
+    // Each level is density-appropriate: no 1M-point frames, no coarse pop.
+    const level = levelFor(camera.scale);
     let tiles;
-    if (useOutline(camera.scale)) {
+    if (level === 0) {
       if (!outline) {
         outline = { pending: true };
         fetch('/data/world-outline.json')
@@ -159,7 +165,7 @@ async function bootInner(el, opts = {}) {
         tiles = [];
       }
     } else {
-      tiles = store.ensure(visibleTileKeys(camera, width, height));
+      tiles = stores[level].ensure(visibleTileKeys(camera, width, height, LEVEL_DEG[level]));
     }
     const cmds = buildDisplayList(extractSnapshot(s), camera, width, height, tiles);
     renderCanvas2D(offCtx, width, height, cmds);
@@ -170,7 +176,7 @@ async function bootInner(el, opts = {}) {
     frameEma = frameEma === 0 ? dt : frameEma * 0.9 + dt * 0.1;
     lastPts = cmds.reduce((n, c) => n + (c.batches ? c.batches.reduce((m, b) => m + b.length, 0) : 0), 0);
     if (perfEl) {
-      perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts ${store.size()}tiles${lastFetchError ? ' FETCH:' + lastFetchError : ''}`;
+      perfEl.textContent = `${frameEma.toFixed(1)}ms ${Math.round(lastPts / 1000)}kpts L${levelFor(camera.scale)} t${stores[1].size() + stores[2].size()}${lastFetchError ? ' FETCH:' + lastFetchError : ''}`;
     }
   };
   // rAF coalescing: bursts of events render once per frame. Drag pans only
